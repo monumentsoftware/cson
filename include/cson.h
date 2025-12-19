@@ -249,6 +249,39 @@ public:
     Entity* clone() const override;
 
     size_t count() const override{ return mValues.size(); }
+
+    class Iterator {
+    public:
+
+        Iterator(std::vector<Entity*>::iterator it) : mIterator(it) {
+        }
+
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = Entity*;
+        using pointer           = value_type*;  // or also value_type*
+        using reference         = value_type&;  // or also value_type&
+
+        reference operator*() { return *mIterator; }
+        pointer operator->() { return mIterator.operator->(); }
+
+        // Prefix increment
+        Iterator& operator++() {
+            ++mIterator;
+            return *this;
+        }
+
+        // Postfix increment
+        Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator== (const Iterator& a, const Iterator& b) { return a.mIterator == b.mIterator; };
+        friend bool operator!= (const Iterator& a, const Iterator& b) { return a.mIterator != b.mIterator; };
+    private:
+        std::vector<Entity*>::iterator mIterator;
+    };
+
+    Iterator begin() { return Iterator(mValues.begin()); }
+    Iterator end()   { return Iterator(mValues.end()); }
 private:
     std::vector<Entity*> mValues;
 
