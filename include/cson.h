@@ -206,10 +206,10 @@ public:
         friend bool operator!= (const Iterator& a, const Iterator& b) { return a.mIterator != b.mIterator; };
     private:
         std::vector<KeyAndEntity>::iterator mIterator;
-   };
+    };
 
     Iterator begin() { return Iterator(mEntities.begin()); }
-    Iterator end()   { return Iterator(mEntities.end()); } // 200 is out of bounds
+    Iterator end()   { return Iterator(mEntities.end()); }
 
 private:
     std::vector<KeyAndEntity> mEntities;
