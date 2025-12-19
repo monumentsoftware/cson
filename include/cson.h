@@ -103,6 +103,9 @@ public:
     virtual Entity* clone() const = 0;
 protected:
     static std::string s_EmptyString;
+
+    Entity(const Entity&) = delete;
+    void operator=(const Entity&) = delete;
 };
 
 class Object : public Entity {
