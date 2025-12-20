@@ -8,19 +8,19 @@ void parseFile() {
     auto context = Parser::parseFromFile("example1.json");
     
     auto& obj = context.object();
-    for (auto t : obj) {
+    for (auto& t : obj) {
         printf("%s: ", t.key().c_str());
-        if (t.entity().isString()) {
-            printf("[string] %s\n", t.entity().stringValue().c_str());
-        } else if (t.entity().isNumber()) {
-            printf("[number] %f\n", t.entity().floatValue());
-        } else if (t.entity().isBoolean()) {
-            printf("[bool] %s\n", t.entity().boolValue() ? "true":"false");
-        } else if (t.entity().isNull()) {
+        if (t->isString()) {
+            printf("[string] %s\n", t->stringValue().c_str());
+        } else if (t->isNumber()) {
+            printf("[number] %f\n", t->floatValue());
+        } else if (t->isBoolean()) {
+            printf("[bool] %s\n", t->boolValue() ? "true":"false");
+        } else if (t->isNull()) {
             printf("[null]\n");
-        } else if (t.entity().isArray()) {
+        } else if (t->isArray()) {
             printf("[arr]");
-            for (auto a : t.entity().array()) {
+            for (auto a : t->array()) {
                 printf(" %s;", a->stringValue().c_str());
             }
             printf("\n");

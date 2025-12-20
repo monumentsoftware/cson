@@ -170,6 +170,8 @@ public:
         KeyAndEntity(const std::string& key_, Entity* entity_) : mKey(key_), mEntity(entity_) {
         }
 
+        Entity* operator->() { return mEntity; }
+
         const std::string& key() const { return mKey; }
 
         Entity& entity() { return *mEntity; }
@@ -187,8 +189,8 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
         using value_type        = KeyAndEntity;
-        using pointer           = value_type*;  // or also value_type*
-        using reference         = value_type&;  // or also value_type&
+        using pointer           = value_type*;
+        using reference         = value_type&;
 
         reference operator*() { return *mIterator; }
         pointer operator->() { return mIterator.operator->(); }
