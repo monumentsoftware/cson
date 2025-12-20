@@ -534,64 +534,64 @@ void Array::removeAtIndex(size_t index) {
     mValues.erase(mValues.begin() + index);
 }
 
-Array* Array::addArray() {
+Array& Array::addArray() {
     auto* arr = new Array();
     mValues.push_back(arr);
-    return arr;
+    return *arr;
 }
 
-Object* Array::addObject() {
+Object& Array::addObject() {
     auto* arr = new Object();
     mValues.push_back(arr);
-    return arr;
+    return *arr;
 }
 
-Number* Array::addInt(int value) {
+Number& Array::addInt(int value) {
     auto* num = new Number();
     num->setInt(value);
     mValues.push_back(num);
-    return num;
+    return *num;
 }
 
-Number* Array::addFloat(float value) {
+Number& Array::addFloat(float value) {
     auto* num = new Number();
     num->setFloat(value);
     mValues.push_back(num);
-    return num;
+    return *num;
 }
 
-Number* Array::addDouble(double value) {
+Number& Array::addDouble(double value) {
     auto* num = new Number();
     num->setDouble(value);
     mValues.push_back(num);
-    return num;
+    return *num;
 }
 
-String* Array::addString(const char* str) {
+String& Array::addString(const char* str) {
     auto* s = new String();
     s->setString(str);
     mValues.push_back(s);
-    return s;
+    return *s;
 }
 
-String* Array::addString(const std::string& str) {
+String& Array::addString(const std::string& str) {
     auto* s = new String();
     s->setString(str);
     mValues.push_back(s);
-    return s;
+    return *s;
 }
 
-Boolean* Array::addBool(bool value) {
+Boolean& Array::addBool(bool value) {
     auto* b = new Boolean();
     b->setBool(value);
     mValues.push_back(b);
-    return b;
+    return *b;
 }
 
-Null* Array::addNull() {
+Null& Array::addNull() {
     auto* n = new Null();
     mValues.push_back(n);
-    return n;
+    return *n;
 }
 
 std::string Array::toString(bool prettyPrint, const std::string& indentation, int level) const {
@@ -617,101 +617,89 @@ const std::string& Array::stringValueAtIndex(size_t index, const std::string& de
     return static_cast<String*>(mValues[index])->value();
 }
 
-Number* Array::numberAtIndex(size_t index) const
+Number& Array::numberAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isNumber())
-    {
-        return NULL;
+    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+        throw Exception("");
     }
-    return static_cast<Number*>(mValues[index]);
+    return *static_cast<Number*>(mValues[index]);
 }
 
 int Array::intValueAtIndex(size_t index, int defaultValue) const
 {
-    auto* number = numberAtIndex(index);
-    if (!number) {
-        return defaultValue;
-    }
-    return number->valueInt();
+    auto& number = numberAtIndex(index);
+    return number.valueInt();
 }
 
 float Array::floatValueAtIndex(size_t index, float defaultValue) const
 {
-    auto* number = numberAtIndex(index);
-    if (!number) {
-        return defaultValue;
-    }
-    return number->valueFloat();
+    auto& number = numberAtIndex(index);
+    return number.valueFloat();
 }
 
 double Array::doubleValueAtIndex(size_t index, double defaultValue) const
 {
-    auto* number = numberAtIndex(index);
-    if (!number) {
-        return defaultValue;
-    }
-    return number->valueDouble();
+    auto& number = numberAtIndex(index);
+    return number.valueDouble();
 }
 
-Array* Array::arrayAtIndex(size_t index) const
-{
-    if (index < 0 || index >= count())
-    {
-        return NULL;
-    }
-    auto* e = mValues[index];
-    if (e && e->isArray()) {
-        return static_cast<Array*>(e);
-    }
-    return nullptr;
-}
-
-Object* Array::objectAtIndex(size_t index) const
+Array& Array::arrayAtIndex(size_t index) const
 {
     if (index < 0 || index >= count()) {
-        return NULL;
+        throw OutOfBounds();
     }
 
     auto* e = mValues[index];
-    if (e && e->isObject()) {
-        return static_cast<Object*>(e);
+    if (!e || !e->isArray()) {
+        throw InvalidType();
     }
-    return nullptr;
+    return *static_cast<Array*>(e);
 }
 
-Boolean* Array::boolAtIndex(size_t index) const
+Object& Array::objectAtIndex(size_t index) const
 {
     if (index < 0 || index >= count()) {
-        return nullptr;
+        throw OutOfBounds();
     }
 
     auto* e = mValues[index];
-    if (e && e->isBoolean()) {
-        return static_cast<Boolean*>(e);
+    if (!e || !e->isObject()) {
+        throw InvalidType();
     }
-    return nullptr;
+    return *static_cast<Object*>(e);
+}
+
+Boolean& Array::boolAtIndex(size_t index) const
+{
+    if (index < 0 || index >= count()) {
+        throw OutOfBounds();
+    }
+
+    auto* e = mValues[index];
+    if (!e || !e->isBoolean()) {
+        throw InvalidType();
+    }
+
+    return *static_cast<Boolean*>(e);
 }
 
 bool Array::boolValueAtIndex(size_t index, bool defaultValue) const
 {
-    auto* b = boolAtIndex(index);
-    if (!b) {
-        return defaultValue;
-    }
-    return b->value();
+    auto& b = boolAtIndex(index);
+    return b.value();
 }
 
-Null* Array::nullAtIndex(size_t index) const
+Null& Array::nullAtIndex(size_t index) const
 {
     if (index < 0 || index >= count()) {
-        return nullptr;
+        throw OutOfBounds();
     }
 
     auto* e = mValues[index];
-    if (e && e->isNull()) {
-        return static_cast<Null*>(e);
+    if (!e || !e->isNull()) {
+        throw InvalidType();
     }
-    return nullptr;
+    return *static_cast<Null*>(e);
 }
 
 Entity& Array::entityAtIndex(size_t index)
@@ -728,8 +716,7 @@ Entity* Array::clone() const
 {
     auto* clone = new Array();
     clone->mValues.resize(mValues.size());
-    for (std::size_t i = 0; i < mValues.size(); i++)
-    {
+    for (std::size_t i = 0; i < mValues.size(); i++) {
         auto* e = mValues[i]->clone();
         clone->mValues[i] = e;
     }
@@ -752,72 +739,60 @@ bool Object::contains(const std::string& key) const
     return mEntityByKey.find(key) != mEntityByKey.end();
 }
 
-Array* Object::addArray(const std::string& name)
+Array& Object::addArray(const std::string& name)
 {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* arr = new Array();
     mEntities.push_back(KeyAndEntity(name, arr));
     mEntityByKey[name] = arr;
-    return arr;
+    return *arr;
 }
 
-Object* Object::addObject(const std::string& name)
+Object& Object::addObject(const std::string& name)
 {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* obj = new Object();
     mEntities.push_back(KeyAndEntity(name, obj));
     mEntityByKey[name] = obj;
-    return obj;
+    return *obj;
 }
 
-Number* Object::addNumber(const std::string& name) {
+Number& Object::addNumber(const std::string& name) {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* num = new Number();
     mEntities.push_back(KeyAndEntity(name, num));
     mEntityByKey[name] = num;
-    return num;
+    return *num;
 }
 
-Number* Object::addInt(const std::string& name, int i)
+Number& Object::addInt(const std::string& name, int i)
 {
-    auto* num = addNumber(name);
-    if (num) {
-        num->setInt(i);
-    }
-    return num;
+    return addNumber(name);
 }
 
-Number* Object::addFloat(const std::string& name, float f)
+Number& Object::addFloat(const std::string& name, float f)
 {
-    auto* num = addNumber(name);
-    if (num) {
-        num->setFloat(f);
-    }
-    return num;
+    return addNumber(name);
 }
 
-Number* Object::addDouble(const std::string& name, double d)
+Number& Object::addDouble(const std::string& name, double d)
 {
-    auto* num = addNumber(name);
-    if (num) {
-        num->setDouble(d);
-    }
-    return num;
+    return addNumber(name);
 }
 
-String* Object::addString(const std::string& name, const char* value)
+String& Object::addString(const std::string& name, const char* value)
 {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* str = new String();
@@ -826,35 +801,35 @@ String* Object::addString(const std::string& name, const char* value)
     }
     mEntities.push_back(KeyAndEntity(name, str));
     mEntityByKey[name] = str;
-    return str;
+    return *str;
 }
 
-Boolean* Object::addBoolean(const std::string& name, bool b)
+Boolean& Object::addBoolean(const std::string& name, bool b)
 {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* boolean = new Boolean();
     boolean->setBool(b);
     mEntities.push_back(KeyAndEntity(name, boolean));
     mEntityByKey[name] = boolean;
-    return boolean;
+    return *boolean;
 }
 
-Null* Object::addNull(const std::string& name)
+Null& Object::addNull(const std::string& name)
 {
     if (contains(name)) {
-        return nullptr;
+        throw NoSuchKey();
     }
 
     auto* null = new Null();
     mEntities.push_back(KeyAndEntity(name, null));
     mEntityByKey[name] = null;
-    return null;
+    return *null;
 }
 
-Number* Object::setInt(const std::string& name, int i)
+Number& Object::setInt(const std::string& name, int i)
 {
     auto* ent = entityForKey(name);
     if (!ent) {
@@ -867,10 +842,10 @@ Number* Object::setInt(const std::string& name, int i)
         return addInt(name, i);
     }
     ent->number().setInt(i);
-    return &ent->number();
+    return ent->number();
 }
 
-Number* Object::setFloat(const std::string& name, float f)
+Number& Object::setFloat(const std::string& name, float f)
 {
     auto* ent = entityForKey(name);
     if (!ent) {
@@ -882,10 +857,10 @@ Number* Object::setFloat(const std::string& name, float f)
         return addFloat(name, f);
     }
     ent->number().setFloat(f);
-    return &ent->number();
+    return ent->number();
 }
 
-Number* Object::setDouble(const std::string& name, double d)
+Number& Object::setDouble(const std::string& name, double d)
 {
     auto* ent = entityForKey(name);
     if (!ent) {
@@ -897,10 +872,10 @@ Number* Object::setDouble(const std::string& name, double d)
         return addDouble(name, d);
     }
     ent->number().setDouble(d);
-    return &ent->number();
+    return ent->number();
 }
 
-String* Object::setString(const std::string& name, const char* value)
+String& Object::setString(const std::string& name, const char* value)
 {
     auto* ent = entityForKey(name);
     if (!ent) {
@@ -912,10 +887,10 @@ String* Object::setString(const std::string& name, const char* value)
         return addString(name, value);
     }
     ent->string().setString(value);
-    return &ent->string();
+    return ent->string();
 }
 
-Boolean* Object::setBoolean(const std::string& name, bool b)
+Boolean& Object::setBoolean(const std::string& name, bool b)
 {
     auto* ent = entityForKey(name);
     if (!ent) {
@@ -927,7 +902,7 @@ Boolean* Object::setBoolean(const std::string& name, bool b)
         return addBoolean(name, b);
     }
     ent->boolean().setBool(b);
-    return &ent->boolean();
+    return ent->boolean();
 }
 
 Entity& Object::entityAtIndex(size_t idx)

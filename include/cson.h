@@ -26,6 +26,24 @@ protected:
     std::string mMessage;
 };
 
+class OutOfBounds : public Exception {
+public:
+    OutOfBounds() : Exception("Out of bounds") {
+    }
+};
+
+class InvalidType : public Exception {
+public:
+    InvalidType() : Exception("Invalid type") {
+    }
+};
+
+class NoSuchKey : public Exception {
+public:
+    NoSuchKey() : Exception("No such key") {
+    }
+};
+
 class ParseErrorException : public Exception {
 public:
     ParseErrorException(const char* data, size_t dataLength, size_t position, const char* txt, ...) __attribute__((format(printf, 5, 6)));
@@ -129,21 +147,21 @@ public:
     bool contains(const std::string& key) const override;
     bool remove(const std::string& name);
 
-    Array* addArray(const std::string& name);
-    Object* addObject(const std::string& name);
-    Number* addNumber(const std::string& name);
-    Number* addInt(const std::string& name, int i);
-    Number* addFloat(const std::string& name, float f);
-    Number* addDouble(const std::string& name, double d);
-    String* addString(const std::string& name, const char* value = NULL);
-    Boolean* addBoolean(const std::string& name, bool b = false);
-    Null* addNull(const std::string& name);
+    Array& addArray(const std::string& name);
+    Object& addObject(const std::string& name);
+    Number& addNumber(const std::string& name);
+    Number& addInt(const std::string& name, int i);
+    Number& addFloat(const std::string& name, float f);
+    Number& addDouble(const std::string& name, double d);
+    String& addString(const std::string& name, const char* value = NULL);
+    Boolean& addBoolean(const std::string& name, bool b = false);
+    Null& addNull(const std::string& name);
 
-    Number* setInt(const std::string& name, int i);
-    Number* setFloat(const std::string&name, float f);
-    Number* setDouble(const std::string& name, double d);
-    String* setString(const std::string& name, const char* value = NULL);
-    Boolean* setBoolean(const std::string& name, bool value = false);
+    Number& setInt(const std::string& name, int i);
+    Number& setFloat(const std::string&name, float f);
+    Number& setDouble(const std::string& name, double d);
+    String& setString(const std::string& name, const char* value = NULL);
+    Boolean& setBoolean(const std::string& name, bool value = false);
 
     const std::string& stringValueForKey(const char* name, const std::string& defaultValue = s_EmptyString) const { return stringValueForKey(std::string(name), defaultValue); }
     const std::string& stringValueForKey(const std::string& name, const std::string& defaultValue = s_EmptyString) const;
@@ -241,15 +259,15 @@ public:
 
     void removeAtIndex(size_t index);
 
-    Array* addArray();
-    Object* addObject();
-    Number* addInt(int value);
-    Number* addFloat(float value);
-    Number* addDouble(double value);
-    String* addString(const char* str);
-    String* addString(const std::string& str);
-    Boolean* addBool(bool value);
-    Null* addNull();
+    Array& addArray();
+    Object& addObject();
+    Number& addInt(int value);
+    Number& addFloat(float value);
+    Number& addDouble(double value);
+    String& addString(const char* str);
+    String& addString(const std::string& str);
+    Boolean& addBool(bool value);
+    Null& addNull();
 
     const std::string& stringValueAtIndex(size_t index, const std::string& defaultValue = s_EmptyString) const;
     int intValueAtIndex(size_t index, int defaultValue = 0) const;
@@ -257,11 +275,11 @@ public:
     double doubleValueAtIndex(size_t index, double defaultValue = 0.0f) const;
     bool boolValueAtIndex(size_t index, bool defaultValue = false) const;
 
-    Number* numberAtIndex(size_t index) const;
-    Array* arrayAtIndex(size_t index) const;
-    Object* objectAtIndex(size_t index) const;
-    Boolean* boolAtIndex(size_t index) const;
-    Null* nullAtIndex(size_t index) const;
+    Number& numberAtIndex(size_t index) const;
+    Array& arrayAtIndex(size_t index) const;
+    Object& objectAtIndex(size_t index) const;
+    Boolean& boolAtIndex(size_t index) const;
+    Null& nullAtIndex(size_t index) const;
     Entity& entityAtIndex(size_t index);
     const Entity& entityAtIndex(size_t index) const;
 
