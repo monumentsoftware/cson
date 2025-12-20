@@ -52,8 +52,19 @@ public:
 class Entity {
 public:
 
+    enum class Type {
+        object,
+        array,
+        number,
+        string,
+        boolean,
+        null
+    };
+
     Entity();
     virtual ~Entity();
+
+    virtual Type type() const = 0;
 
     const Object& object() const;
     Object& object();
@@ -111,7 +122,9 @@ protected:
 class Object : public Entity {
 public:
     Object();
-    virtual ~Object();
+    ~Object() override;
+
+    Type type() const override { return Type::object; }
 
     bool contains(const std::string& key) const override;
     bool remove(const std::string& name);
@@ -224,6 +237,8 @@ public:
     Array();
     ~Array() override;
 
+    Type type() const override { return Type::array; }
+
     void removeAtIndex(size_t index);
 
     Array* addArray();
@@ -299,6 +314,8 @@ public:
     String();
     ~String() override;
 
+    Type type() const override { return Type::string; }
+
     void setString(const char* str);
     void setString(const std::string& str);
 
@@ -315,6 +332,9 @@ private:
 class Number : public Entity
 {
 public:
+
+    Type type() const override { return Type::number; }
+
     void setInt(int i);
     void setFloat(float f);
     void setDouble(double d);
@@ -339,6 +359,8 @@ public:
     Boolean();
     ~Boolean() override;
 
+    Type type() const override { return Type::boolean; }
+
     void setBool(bool b);
 
     std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
@@ -354,6 +376,9 @@ private:
 
 class Null : public Entity {
 public:
+
+    Type type() const override { return Type::null; }
+
     std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
 
     Entity* clone() const override;

@@ -10,22 +10,30 @@ void parseFile() {
     auto& obj = context.object();
     for (auto& t : obj) {
         printf("%s: ", t.key().c_str());
-        if (t->isString()) {
+
+        switch (t->type()) {
+        case Entity::Type::string:
             printf("[string] %s\n", t->stringValue().c_str());
-        } else if (t->isNumber()) {
+            break;
+        case Entity::Type::number:
             printf("[number] %f\n", t->floatValue());
-        } else if (t->isBoolean()) {
+            break;
+        case Entity::Type::boolean:
             printf("[bool] %s\n", t->boolValue() ? "true":"false");
-        } else if (t->isNull()) {
+            break;
+        case Entity::Type::null:
             printf("[null]\n");
-        } else if (t->isArray()) {
+            break;
+        case Entity::Type::array:
             printf("[arr]");
             for (auto a : t->array()) {
                 printf(" %s;", a->stringValue().c_str());
             }
             printf("\n");
-        } else {
+            break;
+        default:
             printf("unkown type\n");
+            break;
         }
     }
 }
