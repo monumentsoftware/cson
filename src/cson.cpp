@@ -337,7 +337,7 @@ float Entity::floatValue() const
 
 double Entity::doubleValue() const
 {
-    return atof(Number().value().c_str());
+    return atof(number().value().c_str());
 }
 
 bool Entity::boolValue() const
