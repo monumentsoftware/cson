@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
-
+#include <memory>
 
 #ifndef _WIN32
 #define MJSONvsprintf(str, size, format, args) vsnprintf(str, size, format, args)
@@ -1337,7 +1337,7 @@ Entity* Parser::parseValue()
 
 Array* Parser::parseArray()
 {
-    auto* arr = new Array();
+    auto arr = std::make_unique<Array>();
     while (true)
     {
         skipWhitespaces();
@@ -1356,12 +1356,12 @@ Array* Parser::parseArray()
             break;
         }
     }
-    return arr;
+    return arr.release();
 }
 
 Object* Parser::parseObject()
 {
-    auto* obj = new Object();
+    auto obj = std::make_unique<Object>();
     while (true)
     {
         skipWhitespaces();
@@ -1386,7 +1386,7 @@ Object* Parser::parseObject()
             break;
         }
     }
-    return obj;
+    return obj.release();
 }
 
 void Parser::readDigits(std::string& dest) {
@@ -1402,7 +1402,7 @@ void Parser::readDigits(std::string& dest) {
 
 Number* Parser::parseNumber()
 {
-    auto* num = new Number();
+    auto num = std::make_unique<Number>();
     std::string str;
     str.reserve(32);
 
@@ -1444,7 +1444,7 @@ Number* Parser::parseNumber()
     }
 
     num->mNumber = str;
-    return num;
+    return num.release();
 }
 
 
