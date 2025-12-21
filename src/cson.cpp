@@ -73,14 +73,11 @@ ParseErrorException::ParseErrorException(const char* data, size_t dataLength, si
 
         size_t nextLinesCount = 0;
         size_t next2LinesEndPos = endPosOfLine;
-        for (size_t i = endPosOfLine + 1; i < dataLength; i++)
-        {
+        for (size_t i = endPosOfLine + 1; i < dataLength; i++) {
             next2LinesEndPos = i;
-            if (data[i] == '\n')
-            {
+            if (data[i] == '\n') {
                 nextLinesCount++;
-                if (nextLinesCount >= 2)
-                {
+                if (nextLinesCount >= 2) {
                     break;
                 }
             }
@@ -97,12 +94,11 @@ ParseErrorException::ParseErrorException(const char* data, size_t dataLength, si
         markerLine.push_back('\n');
 
         int surroundingStart = prev2StartOfLinePos; // attempt to include 2 previous lines
-        if (surroundingStart < 0)
-        {
+        if (surroundingStart < 0) {
             surroundingStart = prevStartOfLinePos;
         }
-        if (surroundingStart < 0)
-        {
+
+        if (surroundingStart < 0) {
             surroundingStart = currentStartOfLinePos;
         }
         std::string prevAndCurrentText(data + surroundingStart, endPosOfLine - surroundingStart + 1);
@@ -144,8 +140,7 @@ static std::string EscapeString(const std::string& str) {
     out.reserve(str.length() + escapeCount);
     for (std::string::size_type i = 0; i < str.length(); i++) {
         char c = str[i];
-        switch (c)
-        {
+        switch (c) {
         case '\b':
             out += "\\b";
             break;
@@ -304,49 +299,41 @@ Null& Entity::null() {
     return *n;
 }
 
-const std::string& Entity::keyByIndex(size_t index) const
-{
+const std::string& Entity::keyByIndex(size_t index) const {
     if (!isObject()) {
         throw Exception("ObjectMemberNameByIndex() is only allowed for objects");
     }
     return Object().keyByIndex(index);
 }
 
-size_t Entity::count() const
-{
+size_t Entity::count() const {
     throw Exception("Count is not applicapable for this type");
 }
 
-const std::string& Entity::stringValue() const
-{
+const std::string& Entity::stringValue() const {
     if (!isString()) {
         throw Exception("Called StringValue for non string entity");
     }
     return string().value();
 }
 
-int Entity::intValue() const
-{
+int Entity::intValue() const {
     return atoi(number().value().c_str());
 }
 
-float Entity::floatValue() const
-{
+float Entity::floatValue() const {
     return doubleValue();
 }
 
-double Entity::doubleValue() const
-{
+double Entity::doubleValue() const {
     return atof(number().value().c_str());
 }
 
-bool Entity::boolValue() const
-{
+bool Entity::boolValue() const {
     return boolean().value();
 }
 
-const Entity& Entity::operator[] (size_t idx) const
-{
+const Entity& Entity::operator[] (size_t idx) const {
     if (isArray()) {
         return array().entityAtIndex(idx);
     }
@@ -357,27 +344,14 @@ const Entity& Entity::operator[] (size_t idx) const
     }
 }
 
-#if 0
-const Entity& Entity::operator[] (const char* key) const
-{
-    if (!isObject())
-    {
-        throw Exception("operator[](key) is only allowed for objects");
-    }
-    return *object().GetEntity(key);
-}
-#endif
-
-const Entity& Entity::operator[] (const std::string& key) const
-{
+const Entity& Entity::operator[] (const std::string& key) const {
     if (!isObject()) {
         throw Exception("operator[](key) is only allowed for objects");
     }
     return *object().entityForKey(key);
 }
 
-Entity& Entity::operator[] (size_t idx)
-{
+Entity& Entity::operator[] (size_t idx) {
     if (isArray()) {
         return array().entityAtIndex(idx);
     }
@@ -395,109 +369,90 @@ Entity& Entity::operator[] (const char* key) {
     return *object().entityForKey(key);
 }
 
-Entity& Entity::operator[] (const std::string& key)
-{
-    if (!isObject())
-    {
+Entity& Entity::operator[] (const std::string& key) {
+    if (!isObject()) {
         throw Exception("operator[](key) is only allowed for objects");
     }
     return *object().entityForKey(key);
 }
 
-void Number::setInt(int i)
-{
+void Number::setInt(int i) {
     char buf[256];
     snprintf(buf, sizeof(buf), "%d", i);
     mNumber = buf;
 }
 
-void Number::setFloat(float f)
-{
+void Number::setFloat(float f) {
     char buf[256];
     snprintf(buf, sizeof(buf), "%f", f);
     mNumber = buf;
 }
 
-void Number::setDouble(double d)
-{
+void Number::setDouble(double d) {
     char buf[256];
     snprintf(buf, sizeof(buf), "%f", d);
     mNumber = buf;
 }
 
-void Number::setString(const std::string& num)
-{
+void Number::setString(const std::string& num) {
     mNumber = num;
 }
 
-int Number::valueInt() const
-{
+int Number::valueInt() const {
     std::stringstream stream(mNumber);
     int v;
     stream >> v;
-    if (stream.fail())
-    {
+    if (stream.fail()) {
         v = 0;
     }
     return v;
 }
 
-float Number::valueFloat() const
-{
+float Number::valueFloat() const {
     std::stringstream stream(mNumber);
     float v;
     stream >> v;
-    if (stream.fail())
-    {
+    if (stream.fail()) {
         v = 0.0f;
     }
     return v;
 }
 
-double Number::valueDouble() const
-{
+double Number::valueDouble() const {
     std::stringstream stream(mNumber);
     double v;
     stream >> v;
-    if (stream.fail())
-    {
+    if (stream.fail()) {
         v = 0.0;
     }
     return v;
 }
 
-std::string Number::toString(bool prettyPrint, const std::string& indentation, int level) const
-{
+std::string Number::toString(bool prettyPrint, const std::string& indentation, int level) const {
     return mNumber;
 }
 
-Entity* Number::clone() const
-{
+Entity* Number::clone() const {
     auto* clone = new Number();
     clone->mNumber = mNumber;
     return clone;
 }
 
-String::String()
-{
+String::String() {
 }
 
-String::~String()
-{
+String::~String() {
 }
 
-void String::setString(const char* str)
-{
+void String::setString(const char* str) {
     mValue = std::string(str);
 }
 
-void String::setString(const std::string& str)
-{
+void String::setString(const std::string& str) {
     mValue = str;
 }
 
-std::string String::toString(bool prettyPrint, const std::string& indentation, int level) const
-{
+std::string String::toString(bool prettyPrint, const std::string& indentation, int level) const {
     std::string s;
     s += "\"";
     s += EscapeString(mValue);
@@ -505,19 +460,16 @@ std::string String::toString(bool prettyPrint, const std::string& indentation, i
     return s;
 }
 
-Entity* String::clone() const
-{
+Entity* String::clone() const {
     auto* clone = new String();
     clone->mValue = mValue;
     return clone;
 }
 
-Array::Array()
-{
+Array::Array() {
 }
 
-Array::~Array()
-{
+Array::~Array() {
     for (size_t i = 0; i < mValues.size(); i++) {
         delete mValues[i];
     }
@@ -525,8 +477,7 @@ Array::~Array()
 
 void Array::removeAtIndex(size_t index) {
     if (index < 0 ||
-        index >= (int)mValues.size())
-    {
+        index >= (int)mValues.size()) {
         throw Exception("index out of range");
     }
     auto* ent = mValues[index];
@@ -598,8 +549,7 @@ std::string Array::toString(bool prettyPrint, const std::string& indentation, in
     std::string s;
     s += "[";
     for (size_t i = 0; i < mValues.size(); i++) {
-        if (i != 0)
-        {
+        if (i != 0) {
             s += ",";
         }
         s += mValues.at(i)->toString(prettyPrint, indentation, level+1);
@@ -610,8 +560,7 @@ std::string Array::toString(bool prettyPrint, const std::string& indentation, in
 
 const std::string& Array::stringValueAtIndex(size_t index, const std::string& defaultValue) const
 {
-    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isString())
-    {
+    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isString()) {
         return defaultValue;
     }
     return static_cast<String*>(mValues[index])->value();
@@ -836,8 +785,7 @@ Number& Object::setInt(const std::string& name, int i)
         return addInt(name, i);
     }
 
-    if (!ent->isNumber())
-    {
+    if (!ent->isNumber()) {
         remove(name);
         return addInt(name, i);
     }
@@ -890,8 +838,7 @@ String& Object::setString(const std::string& name, const char* value)
     return ent->string();
 }
 
-Boolean& Object::setBoolean(const std::string& name, bool b)
-{
+Boolean& Object::setBoolean(const std::string& name, bool b) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addBoolean(name, b);
@@ -905,13 +852,11 @@ Boolean& Object::setBoolean(const std::string& name, bool b)
     return ent->boolean();
 }
 
-Entity& Object::entityAtIndex(size_t idx)
-{
+Entity& Object::entityAtIndex(size_t idx) {
     return *mEntities[idx].mEntity;
 }
 
-const Entity& Object::entityAtIndex(size_t idx) const
-{
+const Entity& Object::entityAtIndex(size_t idx) const {
     return *mEntities[idx].mEntity;
 }
 
@@ -919,8 +864,7 @@ const std::string& Object::keyByIndex(size_t idx) const {
     return mEntities[idx].mKey;
 }
 
-std::string Object::toString(bool prettyPrint, const std::string& indentation, int level) const
-{
+std::string Object::toString(bool prettyPrint, const std::string& indentation, int level) const {
     std::string indent;
     if (prettyPrint) {
         for (int i = 0; i < level; i++) {
@@ -1110,32 +1054,27 @@ void Object::mergeFrom(const Object& obj, bool overwrite)
     #endif
 }
 
-Boolean::Boolean()
-{
+Boolean::Boolean() {
 }
 
-Boolean::~Boolean()
-{
+Boolean::~Boolean() {
 }
 
 void Boolean::setBool(bool b) {
     mValue = b;
 }
 
-std::string Boolean::toString(bool prettyPrint, const std::string& indentation, int level) const
-{
+std::string Boolean::toString(bool prettyPrint, const std::string& indentation, int level) const {
     return mValue ? std::string("true") : std::string("false");
 }
 
-Entity* Boolean::clone() const
-{
+Entity* Boolean::clone() const {
     auto* clone = new Boolean();
     clone->mValue = mValue;
     return clone;
 }
 
-std::string Null::toString(bool prettyPrint, const std::string& indentation, int level) const
-{
+std::string Null::toString(bool prettyPrint, const std::string& indentation, int level) const {
     return std::string("null");
 }
 
@@ -1168,12 +1107,12 @@ Parser::~Parser() {
 }
 
 void Parser::skipWhitespaces() {
-    while ( mPosition < mLength &&
-           (mText[mPosition] == ' ' ||
-            mText[mPosition] == '\t' ||
-            mText[mPosition] == '\r' ||
-            mText[mPosition] == '\n'))
-    {
+    while ( mPosition < mLength
+           &&
+           (mText[mPosition] == ' '
+            || mText[mPosition] == '\t'
+            || mText[mPosition] == '\r'
+            || mText[mPosition] == '\n')) {
         mPosition++;
     }
 }
@@ -1215,8 +1154,7 @@ bool Parser::tryToConsume(const char* txt) {
     return found;
 }
 
-void Parser::consumeOrDie(const char* txt)
-{
+void Parser::consumeOrDie(const char* txt) {
     size_t origPos = mPosition;
     bool b = tryToConsume(txt);
     if (!b) {
@@ -1224,8 +1162,7 @@ void Parser::consumeOrDie(const char* txt)
     }
 }
 
-static int writeUTF8Chars(char* buf, short unsigned int c)
-{
+static int writeUTF8Chars(char* buf, short unsigned int c) {
     if (c < 128) {
         buf[0] = c;
         return 1;
@@ -1242,8 +1179,7 @@ static int writeUTF8Chars(char* buf, short unsigned int c)
 }
 
 // NOTE: does NOT support empty strings, caller needs to check that!
-std::string Parser::parseStringLiteral()
-{
+std::string Parser::parseStringLiteral() {
     std::string str;
     str.reserve(1024);
 
@@ -1259,8 +1195,7 @@ std::string Parser::parseStringLiteral()
             && mPosition + 1 < mLength) {
             mPosition++;
             c = mText[mPosition];
-            switch (c)
-            {
+            switch (c) {
             case 'b': c = '\b'; break;
             case 'r': c = '\r'; break;
             case 'n': c = '\n'; break;
@@ -1269,11 +1204,9 @@ std::string Parser::parseStringLiteral()
             case '\\': c = '\\'; break;
             case '/': c = '/'; break;
             case '\"': c = '\"'; break;
-            case 'u':
-                {
+            case 'u': {
                     mPosition++;
-                    if (mPosition + 4 > mLength)
-                    {
+                    if (mPosition + 4 > mLength) {
                         throw ParseErrorException(mText, mLength, origPos, "Invalid \\u escaping");
                     }
                     char buf[5];
@@ -1282,8 +1215,7 @@ std::string Parser::parseStringLiteral()
                     int utf8Char = (int)strtol(buf, NULL, 16);
                     char utf8Buf[16];
                     int len = writeUTF8Chars(utf8Buf, utf8Char);
-                    for (int i = 0; i < len-1; i++)
-                    {
+                    for (int i = 0; i < len-1; i++) {
                         str += utf8Buf[i];
                     }
                     c = utf8Buf[len-1];
@@ -1303,8 +1235,7 @@ std::string Parser::parseStringLiteral()
     return str;
 }
 
-Entity* Parser::parseValue()
-{
+Entity* Parser::parseValue() {
     Entity* data = nullptr;
     if (tryToConsume("\"")) {
         if (tryToConsume("\"")) {
@@ -1335,14 +1266,11 @@ Entity* Parser::parseValue()
     return data;
 }
 
-Array* Parser::parseArray()
-{
+Array* Parser::parseArray() {
     auto arr = std::make_unique<Array>();
-    while (true)
-    {
+    while (true) {
         skipWhitespaces();
-        if (tryToConsume("]"))
-        {
+        if (tryToConsume("]")) {
             break;
         }
 
@@ -1350,8 +1278,7 @@ Array* Parser::parseArray()
         arr->mValues.push_back(ent);
 
         skipWhitespaces();
-        if (!tryToConsume(","))
-        {
+        if (!tryToConsume(",")) {
             consumeOrDie("]");
             break;
         }
@@ -1359,14 +1286,11 @@ Array* Parser::parseArray()
     return arr.release();
 }
 
-Object* Parser::parseObject()
-{
+Object* Parser::parseObject() {
     auto obj = std::make_unique<Object>();
-    while (true)
-    {
+    while (true) {
         skipWhitespaces();
-        if (tryToConsume("}"))
-        {
+        if (tryToConsume("}")) {
             break;
         }
 
@@ -1375,7 +1299,6 @@ Object* Parser::parseObject()
         consumeOrDie(":");
         skipWhitespaces();
         auto* ent = parseValue();
-
 
         obj->mEntities.push_back(Object::KeyAndEntity(key, ent));
         obj->mEntityByKey[key] = ent;
@@ -1400,8 +1323,7 @@ void Parser::readDigits(std::string& dest) {
     }
 }
 
-Number* Parser::parseNumber()
-{
+Number* Parser::parseNumber() {
     auto num = std::make_unique<Number>();
     std::string str;
     str.reserve(32);
@@ -1449,16 +1371,14 @@ Number* Parser::parseNumber()
 
 
 // NOTE: does NOT support empty strings, caller needs to check that!
-String* Parser::parseString()
-{
+String* Parser::parseString() {
     std::string str = parseStringLiteral();
     auto* s = new String();
     s->setString(str);
     return s;
 }
 
-JsonContext Parser::parse(const char* txt, size_t length)
-{
+JsonContext Parser::parse(const char* txt, size_t length) {
     mText = txt;
     mLength = length;
     mPosition = 0;
@@ -1507,8 +1427,7 @@ JsonContext Parser::parseString(const std::string& txt) {
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseFile(const std::string& path)
-{
+JsonContext Parser::parseFile(const std::string& path) {
     struct FileCloser {
         FILE* mFile;
         FileCloser(FILE* f) {
@@ -1520,10 +1439,9 @@ JsonContext Parser::parseFile(const std::string& path)
         }
     };
 
-    auto* f = fopen(path, "rb");
-    if (!f)
-    {
-        throw IOException("Failed to open file %s", path);
+    auto* f = fopen(path.c_str(), "rb");
+    if (!f) {
+        throw IOException("Failed to open file %s", path.c_str());
     }
 
     FileCloser file(f); // close the file when leaving this method
@@ -1550,21 +1468,18 @@ Writer::Writer(bool prettyPrint, const std::string& indentation, int level)
 {
 }
 
-void Writer::writeToFile(const std::string& path, const Entity& ent)
-{
+void Writer::writeToFile(const std::string& path, const Entity& ent) {
     std::string json = ent.toString(mPrettyPrint, mIndentation, mLevel);
 
     auto* f = fopen(path.c_str(), "wb");
-    if (!f)
-    {
+    if (!f) {
         throw IOException("Failed to open file for writing");
     }
 
     size_t wr = fwrite(json.c_str(), 1, json.length(), f);
     fclose(f);
 
-    if (wr != json.length())
-    {
+    if (wr != json.length()) {
         throw IOException("Failed to write all bytes to file");
     }
 }

@@ -326,8 +326,7 @@ private:
     friend class Parser;
 };
 
-class String : public Entity
-{
+class String : public Entity {
 public:
     String();
     ~String() override;
@@ -347,8 +346,7 @@ private:
     friend class Parser;
 };
 
-class Number : public Entity
-{
+class Number : public Entity {
 public:
 
     Type type() const override { return Type::number; }
@@ -371,8 +369,7 @@ private:
     friend class Parser;
 };
 
-class Boolean : public Entity
-{
+class Boolean : public Entity {
 public:
     Boolean();
     ~Boolean() override;
@@ -472,8 +469,7 @@ private:
     const char* mText = nullptr;
 };
 
-class Writer
-{
+class Writer {
 public:
     Writer(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0);
 
