@@ -1474,7 +1474,7 @@ Writer::Writer(bool prettyPrint, const std::string& indentation, int level)
 {
 }
 
-void Writer::writeToFile(const std::string& path, const Entity& ent) {
+void Writer::write(const std::string& path, const Entity& ent) {
     std::string json = ent.toString(mPrettyPrint, mIndentation, mLevel);
 
     auto* f = fopen(path.c_str(), "wb");
@@ -1489,5 +1489,12 @@ void Writer::writeToFile(const std::string& path, const Entity& ent) {
         throw IOException("Failed to write all bytes to file");
     }
 }
+
+void Writer::writeToFile(const std::string& path, const Entity& ent, bool prettyPrint, const std::string& indentation, int level) {
+
+    Writer writer(prettyPrint, indentation, level);
+    writer.write(path, ent);
+}
+
 
 } // cson

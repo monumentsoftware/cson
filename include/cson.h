@@ -473,7 +473,9 @@ class Writer {
 public:
     Writer(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0);
 
-    void writeToFile(const std::string& path, const Entity& ent);
+    void write(const std::string& path, const Entity& ent);
+
+    static void writeToFile(const std::string& path, const Entity& ent, bool prettyPrint = true, const std::string& indentation = {" "}, int level = 0);
 private:
     bool mPrettyPrint = false;
 
