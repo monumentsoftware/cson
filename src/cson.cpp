@@ -1507,7 +1507,7 @@ JsonContext Parser::parseString(const std::string& txt) {
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseFromFile(const char* path)
+JsonContext Parser::parseFile(const std::string& path)
 {
     struct FileCloser {
         FILE* mFile;
@@ -1541,11 +1541,6 @@ JsonContext Parser::parseFromFile(const char* path)
     auto context = parseString(buf, (int)size);
     delete[] buf;
     return context;
-}
-
-JsonContext Parser::parseFromFile(const std::string& path)
-{
-    return Parser::parseFromFile(path.c_str());
 }
 
 Writer::Writer(bool prettyPrint, const std::string& indentation, int level)

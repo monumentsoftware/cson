@@ -5,7 +5,7 @@ using namespace cson;
 
 
 void parseFile() {
-    auto context = Parser::parseFromFile("example1.json");
+    auto context = Parser::parseFile("example1.json");
     
     auto& obj = context.object();
     for (auto& t : obj) {

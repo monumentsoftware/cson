@@ -447,8 +447,7 @@ public:
     static JsonContext parseString(const char* txt, size_t length);
     static JsonContext parseString(const std::string& txt);
 
-    static JsonContext parseFromFile(const char* path);
-    static JsonContext parseFromFile(const std::string& path);
+    static JsonContext parseFile(const std::string& path);
 
 private:
     void skipWhitespaces();
