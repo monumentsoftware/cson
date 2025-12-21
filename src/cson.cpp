@@ -1178,6 +1178,19 @@ void Parser::skipWhitespaces() {
     }
 }
 
+char Parser::curChar(bool increment) {
+    if (mPosition == mLength) {
+        throw ParseErrorException(mText, mLength, mPosition, "Empty input");
+    }
+
+    const char c = mText[mPosition];
+    if (increment) {
+        mPosition++;
+    }
+    return c;
+}
+
+
 bool Parser::tryToConsume(const char* txt) {
     size_t storedPos = mPosition;
     int i = 0;
@@ -1376,20 +1389,60 @@ Object* Parser::parseObject()
     return obj;
 }
 
+void Parser::readDigits(std::string& dest) {
+    while (mPosition < mLength) {
+        char c = mText[mPosition];
+        if (c < '0' || c > '9') {
+            break;
+        }
+        dest += c;
+        mPosition++;
+    }
+}
+
 Number* Parser::parseNumber()
 {
     auto* num = new Number();
     std::string str;
     str.reserve(32);
-    while (mPosition < mLength)
-    {
-        char c = mText[mPosition];
-        if ((c < '0' || c > '9') && c != '.' && (c != '-' || !str.empty())) {
-            break;
+
+    if (tryToConsume("-")) {
+        str += "-";
+    }
+
+    if (tryToConsume("0")) {
+        str += "0";
+    } else {
+        const char c = curChar();
+        if (c < '1' && c > '9') {
+            throw ParseErrorException(mText, mLength, mPosition, "Expecting digit 1...9");
         }
+
+        str += c;
+        readDigits(str);
+    }
+
+    // optional fraction part
+    if (tryToConsume(".")) {
+        str += ".";
+        readDigits(str);
+    }
+
+    // optional exponent part
+    char c = curChar(false);
+    if (c == 'e' || c == 'E') {
         str += c;
         mPosition++;
+
+        c = curChar();
+        if (c != '+' && c != '-') {
+            throw ParseErrorException(mText, mLength, mPosition, "Expecting + or -");
+        }
+        str += c;
+
+        readDigits(str);
     }
+
     num->mNumber = str;
     return num;
 }

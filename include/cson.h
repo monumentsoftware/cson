@@ -452,8 +452,10 @@ public:
 
 private:
     void skipWhitespaces();
+    char curChar(bool increment = true);
     bool tryToConsume(const char* txt);
     void consumeOrDie(const char* txt);
+    void readDigits(std::string& dest);
     std::string parseStringLiteral();
 
     Entity* parseValue();
