@@ -362,13 +362,6 @@ Entity& Entity::operator[] (size_t idx) {
     }
 }
 
-Entity& Entity::operator[] (const char* key) {
-    if (!isObject()) {
-        throw Exception("operator[](key) is only allowed for objects");
-    }
-    return *object().entityForKey(key);
-}
-
 Entity& Entity::operator[] (const std::string& key) {
     if (!isObject()) {
         throw Exception("operator[](key) is only allowed for objects");

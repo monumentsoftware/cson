@@ -125,7 +125,6 @@ public:
     const Entity& operator[] (const std::string& key) const;
 
     Entity& operator[] (size_t idx);
-    Entity& operator[] (const char* key);
     Entity& operator[] (const std::string& key);
 
     virtual std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const = 0;
