@@ -725,17 +725,23 @@ Number& Object::addNumber(const std::string& name) {
 
 Number& Object::addInt(const std::string& name, int i)
 {
-    return addNumber(name);
+    auto& number = addNumber(name);
+    number.setInt(i);
+    return number;
 }
 
 Number& Object::addFloat(const std::string& name, float f)
 {
-    return addNumber(name);
+    auto& number = addNumber(name);
+    number.setFloat(f);
+    return number;
 }
 
 Number& Object::addDouble(const std::string& name, double d)
 {
-    return addNumber(name);
+    auto& number = addNumber(name);
+    number.setDouble(d);
+    return number;
 }
 
 String& Object::addString(const std::string& name, const char* value)
