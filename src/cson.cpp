@@ -245,7 +245,7 @@ const String& Entity::string() const {
 String& Entity::string() {
     auto* str = dynamic_cast<String*>(this);
     if (!str) {
-        throw Exception("String() faild for non CString entity");
+        throw Exception("String() failed for non CString entity");
     }
     return *str;
 }
@@ -300,13 +300,13 @@ Null& Entity::null() {
 
 const std::string& Entity::keyByIndex(size_t index) const {
     if (!isObject()) {
-        throw Exception("ObjectMemberNameByIndex() is only allowed for objects");
+        throw Exception("keyByIndex() is only allowed for objects");
     }
     return Object().keyByIndex(index);
 }
 
 size_t Entity::count() const {
-    throw Exception("Count is not applicapable for this type");
+    throw Exception("Count is not applicable for this type");
 }
 
 const std::string& Entity::stringValue() const {
@@ -470,7 +470,7 @@ Array::~Array() {
 void Array::removeAtIndex(size_t index) {
     if (index < 0 ||
         index >= (int)mValues.size()) {
-        throw Exception("index out of range");
+        throw OutOfBounds();
     }
     auto* ent = mValues[index];
     delete ent;
@@ -561,6 +561,9 @@ const std::string& Array::stringValueAtIndex(size_t index, const std::string& de
 Number& Array::numberAtIndex(size_t index) const
 {
     if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+        throw OutOfBounds();
+    }
+    if (!mValues[index] || !mValues[index]->isNumber()) {
         throw Exception("");
     }
     return *static_cast<Number*>(mValues[index]);
