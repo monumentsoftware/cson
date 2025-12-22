@@ -5,7 +5,7 @@ A simple to use C++ JSON parser/writer library.
 ## Features
 
 * Modern fast and simple to use library for C++11 and newer
-* Mutli platform support (Linux, MaxOS, Windows, iOS, Android)
+* Multi platform support (Linux, MaxOS, Windows, iOS, Android)
 
 
 ### Example
