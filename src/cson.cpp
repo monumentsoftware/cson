@@ -46,13 +46,13 @@ ParseErrorException::ParseErrorException(const char* data, size_t dataLength, si
 
     mMessage = std::string(buf);
 
-    if (position >= 0 && data && dataLength > (size_t)position) {
+    if (data && dataLength > position) {
 
         int currentStartOfLinePos = 0;
         int prevStartOfLinePos = -1;
         int prev2StartOfLinePos = -1;
-        int line = 1;
-        for (int i = 0; i < position; i++) {
+        size_t line = 1;
+        for (size_t i = 0; i < position; i++) {
             if (data[i] == '\n') {
                 prev2StartOfLinePos = prevStartOfLinePos;
                 prevStartOfLinePos = currentStartOfLinePos;
@@ -468,8 +468,7 @@ Array::~Array() {
 }
 
 void Array::removeAtIndex(size_t index) {
-    if (index < 0 ||
-        index >= (int)mValues.size()) {
+    if (index >= mValues.size()) {
         throw OutOfBounds();
     }
     auto* ent = mValues[index];
@@ -552,7 +551,7 @@ std::string Array::toString(bool prettyPrint, const std::string& indentation, in
 
 const std::string& Array::stringValueAtIndex(size_t index, const std::string& defaultValue) const
 {
-    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isString()) {
+    if (index >= count() || !mValues[index] || !mValues[index]->isString()) {
         return defaultValue;
     }
     return static_cast<String*>(mValues[index])->value();
@@ -560,7 +559,7 @@ const std::string& Array::stringValueAtIndex(size_t index, const std::string& de
 
 Number& Array::numberAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+    if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         throw OutOfBounds();
     }
     if (!mValues[index] || !mValues[index]->isNumber()) {
@@ -589,7 +588,7 @@ double Array::doubleValueAtIndex(size_t index, double defaultValue) const
 
 Array& Array::arrayAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count()) {
+    if (index >= count()) {
         throw OutOfBounds();
     }
 
@@ -602,7 +601,7 @@ Array& Array::arrayAtIndex(size_t index) const
 
 Object& Array::objectAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count()) {
+    if (index >= count()) {
         throw OutOfBounds();
     }
 
@@ -615,7 +614,7 @@ Object& Array::objectAtIndex(size_t index) const
 
 Boolean& Array::boolAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count()) {
+    if (index >= count()) {
         throw OutOfBounds();
     }
 
@@ -635,7 +634,7 @@ bool Array::boolValueAtIndex(size_t index, bool defaultValue) const
 
 Null& Array::nullAtIndex(size_t index) const
 {
-    if (index < 0 || index >= count()) {
+    if (index >= count()) {
         throw OutOfBounds();
     }
 
@@ -1448,16 +1447,20 @@ JsonContext Parser::parseFile(const std::string& path) {
     FileCloser file(f); // close the file when leaving this method
 
     fseek(f, 0, SEEK_END);
-    size_t size = ftell(f);
+    long size = ftell(f);
+    if (size < 0) {
+        int err = errno;
+        throw IOException("Read error in file %s, errno: %d (%s)", path.c_str(), err, strerror(err));
+    }
     fseek(f, 0, SEEK_SET);
     char* buf = new char[size];
-    int rd = (int)fread(buf, 1, size, f);
+    size_t rd = fread(buf, 1, size, f);
 
-    if (rd != size) {
+    if (rd != (size_t)size) {
         delete[] buf;
-        throw IOException("Failed to read %d bytes from file (read=%d)", static_cast<int>(size), rd);
+        throw IOException("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
     }
-    auto context = parseString(buf, (int)size);
+    auto context = parseString(buf, size);
     delete[] buf;
     return context;
 }
@@ -1490,6 +1493,5 @@ void Writer::writeToFile(const std::string& path, const Entity& ent, bool pretty
     Writer writer(prettyPrint, indentation, level);
     writer.write(path, ent);
 }
-
 
 } // cson
