@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
-#include <memory>
 
 #ifndef _WIN32
 #define MJSONvsprintf(str, size, format, args) vsnprintf(str, size, format, args)
