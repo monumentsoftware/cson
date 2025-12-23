@@ -536,14 +536,55 @@ Null& Array::addNull() {
     return *n;
 }
 
-std::string Array::toString(bool prettyPrint, const std::string& indentation, int level) const {
-    std::string s;
-    s += "[";
-    for (size_t i = 0; i < mValues.size(); i++) {
-        if (i != 0) {
-            s += ",";
+static void writeCommaIfNeeded(std::string& str, const std::vector<Entity*>& entities, size_t index) {
+    if (entities.at(index)->type() == Entity::Type::comment) {
+        return;
+    }
+
+    bool needsComma = false;
+    for (size_t i = index + 1; i < entities.size(); i++) {
+        if (entities.at(i)->type() != Entity::Type::comment) {
+            needsComma = true;
+            break;
         }
-        s += mValues.at(i)->toString(prettyPrint, indentation, level+1);
+    }
+
+    if (needsComma) {
+        str += ",";
+    }
+}
+
+std::string Array::toString(bool prettyPrint, const std::string& indentation, int level) const {
+
+    std::string s = "[";
+    if (prettyPrint) {
+        std::string prefix;
+        for (size_t i = 0; i < level; i++) {
+            prefix += indentation;
+        }
+
+        s += "\n";
+        for (size_t i = 0; i < mValues.size(); i++) {
+            s += prefix;
+            s += indentation;
+
+            auto* entity = mValues.at(i);
+            s += entity->toString(prettyPrint, indentation, level + 1);
+            writeCommaIfNeeded(s, mValues, i);
+
+            s += "\n";
+        }
+        s += prefix;
+    } else {
+        for (size_t i = 0; i < mValues.size(); i++) {
+            auto* entity = mValues.at(i);
+            if (entity->type() == Type::comment) {
+                continue;
+            }
+
+            s += entity->toString(prettyPrint, indentation, level + 1);
+            writeCommaIfNeeded(s, mValues, i);
+        }
     }
     s += "]";
     return s;
@@ -864,45 +905,75 @@ const std::string& Object::keyByIndex(size_t idx) const {
     return mEntities[idx].mKey;
 }
 
+static void writeCommaIfNeeded(std::string& str, const std::vector<Object::KeyAndEntity>& entities, size_t index) {
+    if (entities.at(index).mEntity->type() == Entity::Type::comment) {
+        return;
+    }
+
+    bool needsComma = false;
+    for (size_t i = index + 1; i < entities.size(); i++) {
+        if (entities.at(i).mEntity->type() != Entity::Type::comment) {
+            needsComma = true;
+            break;
+        }
+    }
+
+    if (needsComma) {
+        str += ",";
+    }
+}
+
 std::string Object::toString(bool prettyPrint, const std::string& indentation, int level) const {
-    std::string indent;
-    if (prettyPrint) {
-        for (int i = 0; i < level; i++) {
-            indent += indentation;
-        }
-    }
-
     std::string s;
-    if (prettyPrint &&
-        level > 0) {
-        s += "\n";
-    }
-
-    s += indent + "{";
-
     if (prettyPrint) {
-        s += "\n";
-    }
-
-    int i = 0;
-    for (auto it = mEntities.begin(); it != mEntities.end(); ++it) {
-        if (i != 0) {
-            s += ",";
-            if (prettyPrint) {
-                s += "\n";
-            }
+        std::string prefix;
+        for (int i = 0; i < level; i++) {
+            prefix += indentation;
         }
-        s += indent + indentation + "\"";
-        s += EscapeString(it->mKey);
-        s += "\"";
-        s += ":";
-        s += it->mEntity->toString(prettyPrint, indentation, level + 1);
-        i++;
-    }
-    if (prettyPrint) {
+
+        if (level > 0) {
+            s += "\n";
+        }
+
+        s += prefix + "{";
         s += "\n";
+
+        for (size_t i = 0; i < mEntities.size(); i++) {
+            const auto& entityAndKey = mEntities.at(i);
+
+            s += prefix + indentation;
+            if (entityAndKey.mEntity->type() != Entity::Type::comment) {
+                s += "\"";
+                s += EscapeString(entityAndKey.mKey);
+                s += "\"";
+                s += ":";
+            }
+            s += entityAndKey.mEntity->toString(prettyPrint, indentation, level + 1);
+
+            writeCommaIfNeeded(s, mEntities, i);
+            s += "\n";
+
+        }
+        s += "\n";
+        s += prefix;
+    } else {
+        s += "{";
+
+        for (size_t i = 0; i < mEntities.size(); i++) {
+            const auto& entityAndKey = mEntities.at(i);
+            if (entityAndKey.mEntity->type() == Type::comment) {
+                continue;
+            }
+
+            s += "\"";
+            s += EscapeString(entityAndKey.mKey);
+            s += "\"";
+            s += ":";
+            s += entityAndKey.mEntity->toString(prettyPrint, indentation, level + 1);
+            writeCommaIfNeeded(s, mEntities, i);
+        }
     }
-    s += indent + "}";
+    s += "}";
     return s;
 }
 
@@ -1082,6 +1153,16 @@ Entity* Null::clone() const {
     return new Null();
 }
 
+std::string Comment::toString(bool prettyPrint, const std::string& indentation, int level) const {
+    return std::string("//") + mText;
+}
+
+Entity* Comment::clone() const {
+    auto* clone = new Comment();
+    clone->mText = mText;
+    return clone;
+}
+
 JsonContext::JsonContext(std::unique_ptr<Entity> root) : mRoot(std::move(root)) {
 }
 
@@ -1104,6 +1185,10 @@ Parser::Parser(){
 }
 
 Parser::~Parser() {
+}
+
+void Parser::allowComments(bool allow) {
+    mAllowComments = allow;
 }
 
 void Parser::skipWhitespaces() {
@@ -1235,6 +1320,25 @@ std::string Parser::parseStringLiteral() {
     return str;
 }
 
+Comment* Parser::parseComment() {
+    if (!mAllowComments) {
+        throw ParseErrorException(mText, mLength, mPosition, "Comments are disabled");
+    }
+
+    std::string text;
+    while (mPosition < mLength) {
+        const auto c = curChar();
+        if (c == '\n') {
+            break;
+        }
+        text += c;
+    }
+
+    auto comment = std::make_unique<Comment>();
+    comment->mText = text;
+    return comment.release();
+}
+
 Entity* Parser::parseValue() {
     Entity* data = nullptr;
     if (tryToConsume("\"")) {
@@ -1270,6 +1374,13 @@ Array* Parser::parseArray() {
     auto arr = std::make_unique<Array>();
     while (true) {
         skipWhitespaces();
+
+        if (tryToConsume("//")) {
+            auto* comment = parseComment();
+            arr->mValues.push_back(comment);
+            skipWhitespaces();
+        }
+
         if (tryToConsume("]")) {
             break;
         }
@@ -1278,6 +1389,13 @@ Array* Parser::parseArray() {
         arr->mValues.push_back(ent);
 
         skipWhitespaces();
+
+        if (tryToConsume("//")) {
+            auto* comment = parseComment();
+            arr->mValues.push_back(comment);
+            skipWhitespaces();
+        }
+
         if (!tryToConsume(",")) {
             consumeOrDie("]");
             break;
@@ -1294,6 +1412,12 @@ Object* Parser::parseObject() {
             break;
         }
 
+        if (tryToConsume("//")) {
+            auto* comment = parseComment();
+            obj->mEntities.push_back(Object::KeyAndEntity("", comment));
+            skipWhitespaces();
+        }
+
         std::string key = parseStringLiteral();
         skipWhitespaces();
         consumeOrDie(":");
@@ -1304,11 +1428,21 @@ Object* Parser::parseObject() {
         obj->mEntityByKey[key] = ent;
 
         skipWhitespaces();
+
+        if (tryToConsume("//")) {
+            auto* comment = parseComment();
+            obj->mEntities.push_back(Object::KeyAndEntity("", comment));
+            skipWhitespaces();
+        }
+
+
         if (!tryToConsume(",")) {
             consumeOrDie("}");
             break;
         }
     }
+
+
     return obj.release();
 }
 
@@ -1412,22 +1546,25 @@ JsonContext Parser::parse(const std::string& txt) {
     return parse(txt.c_str());
 }
 
-JsonContext Parser::parseString(const char* txt) {
+JsonContext Parser::parseString(const char* txt, bool allowComments) {
     Parser parser;
+    parser.allowComments(allowComments);
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseString(const char* txt, size_t length) {
+JsonContext Parser::parseString(const char* txt, size_t length, bool allowComments) {
     Parser parser;
+    parser.allowComments(allowComments);
     return parser.parse(txt, length);
 }
 
-JsonContext Parser::parseString(const std::string& txt) {
+JsonContext Parser::parseString(const std::string& txt, bool allowComments) {
     Parser parser;
+    parser.allowComments(allowComments);
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseFile(const std::string& path) {
+JsonContext Parser::parseFile(const std::string& path, bool allowComments) {
     struct FileCloser {
         FILE* mFile;
         FileCloser(FILE* f) {
@@ -1460,7 +1597,7 @@ JsonContext Parser::parseFile(const std::string& path) {
         delete[] buf;
         throw IOException("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
     }
-    auto context = parseString(buf, size);
+    auto context = parseString(buf, size, allowComments);
     delete[] buf;
     return context;
 }

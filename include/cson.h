@@ -77,7 +77,8 @@ public:
         number,
         string,
         boolean,
-        null
+        null,
+        comment
     };
 
     Entity();
@@ -402,6 +403,20 @@ private:
     friend class Parser;
 };
 
+class Comment : public Entity {
+public:
+    Type type() const override { return Type::comment; }
+
+    std::string toString(bool prettyPrint = true, const std::string& identation = {"  "}, int level = 0) const override;
+
+    Entity* clone() const override;
+private:
+
+    std::string mText;
+
+    friend class Parser;
+};
+
 class JsonContext {
 public:
 
@@ -435,16 +450,18 @@ public:
 
     ~Parser();
 
+    void allowComments(bool allow);
+
     JsonContext parse(const char* txt);
     JsonContext parse(const char* txt, size_t length);
     JsonContext parse(const std::string& txt);
 
     // static convenience functions
-    static JsonContext parseString(const char* txt);
-    static JsonContext parseString(const char* txt, size_t length);
-    static JsonContext parseString(const std::string& txt);
+    static JsonContext parseString(const char* txt, bool allowComments = false);
+    static JsonContext parseString(const char* txt, size_t length, bool allowComments = false);
+    static JsonContext parseString(const std::string& txt, bool allowComments = false);
 
-    static JsonContext parseFile(const std::string& path);
+    static JsonContext parseFile(const std::string& path, bool allowComments = false);
 
 private:
     void skipWhitespaces();
@@ -464,9 +481,12 @@ private:
 
     String* parseString();
 
+    Comment* parseComment();
+
     size_t mPosition = 0;
     size_t mLength = 0;
     const char* mText = nullptr;
+    bool mAllowComments = false;
 };
 
 class Writer {
@@ -475,7 +495,7 @@ public:
 
     void write(const std::string& path, const Entity& ent);
 
-    static void writeToFile(const std::string& path, const Entity& ent, bool prettyPrint = true, const std::string& indentation = {" "}, int level = 0);
+    static void writeToFile(const std::string& path, const Entity& ent, bool prettyPrint = true, const std::string& indentation = {"  "}, int level = 0);
 private:
     bool mPrettyPrint = false;
 
