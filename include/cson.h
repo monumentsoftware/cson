@@ -204,6 +204,8 @@ public:
 
         Entity* operator->() { return mEntity; }
 
+        bool operator == (const std::string& key) const { return mKey == key; }
+
         const std::string& key() const { return mKey; }
 
         Entity& entity() { return *mEntity; }
