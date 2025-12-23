@@ -244,8 +244,43 @@ public:
         std::vector<KeyAndEntity>::iterator mIterator;
     };
 
+    class ConstIterator {
+    public:
+       using iterator_category = std::forward_iterator_tag;
+       using difference_type   = std::ptrdiff_t;
+       using value_type        = KeyAndEntity;
+       using pointer           = const value_type*;
+       using reference         = const value_type&;
+
+       ConstIterator(const std::vector<KeyAndEntity>::const_iterator it) : mIterator(it) {
+       }
+
+       reference operator*() const { return *mIterator; }
+       pointer operator->() const { return mIterator.operator->(); }
+
+       // Prefix increment
+       ConstIterator& operator++() {
+           ++mIterator;
+           return *this;
+       }
+
+       // Postfix increment
+       ConstIterator operator++(int) { ConstIterator tmp = *this; ++(*this); return tmp; }
+
+       friend bool operator== (const ConstIterator& a, const ConstIterator& b) { return a.mIterator == b.mIterator; };
+       friend bool operator!= (const ConstIterator& a, const ConstIterator& b) { return a.mIterator != b.mIterator; };
+    private:
+       std::vector<KeyAndEntity>::const_iterator mIterator;
+    };
+
     Iterator begin() { return Iterator(mEntities.begin()); }
     Iterator end()   { return Iterator(mEntities.end()); }
+
+    ConstIterator begin() const { return ConstIterator(mEntities.begin()); }
+    ConstIterator end() const { return ConstIterator(mEntities.end()); }
+
+    ConstIterator cbegin() { return ConstIterator(mEntities.begin()); }
+    ConstIterator cend()   { return ConstIterator(mEntities.end()); }
 
 private:
     std::vector<KeyAndEntity> mEntities;
@@ -321,8 +356,44 @@ public:
         std::vector<Entity*>::iterator mIterator;
     };
 
+    class ConstIterator {
+    public:
+
+        ConstIterator(const std::vector<Entity*>::const_iterator it) : mIterator(it) {
+        }
+
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = Entity*;
+        using pointer           = const value_type*;  // or also value_type*
+        using reference         = const value_type&;  // or also value_type&
+
+        reference operator*() const { return *mIterator; }
+        pointer operator->() const { return mIterator.operator->(); }
+
+        // Prefix increment
+        ConstIterator& operator++() {
+            ++mIterator;
+            return *this;
+        }
+
+        // Postfix increment
+        ConstIterator operator++(int) { ConstIterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator== (const ConstIterator& a, const ConstIterator& b) { return a.mIterator == b.mIterator; };
+        friend bool operator!= (const ConstIterator& a, const ConstIterator& b) { return a.mIterator != b.mIterator; };
+    private:
+        std::vector<Entity*>::const_iterator mIterator;
+    };
+
     Iterator begin() { return Iterator(mValues.begin()); }
-    Iterator end()   { return Iterator(mValues.end()); }
+    Iterator end() { return Iterator(mValues.end()); }
+
+    ConstIterator begin() const { return ConstIterator(mValues.cbegin()); }
+    ConstIterator end() const { return ConstIterator(mValues.cend()); }
+
+    ConstIterator cbegin() const { return ConstIterator(mValues.cbegin()); }
+    ConstIterator cend() const { return ConstIterator(mValues.cend()); }
 private:
     std::vector<Entity*> mValues;
 
