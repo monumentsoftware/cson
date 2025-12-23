@@ -51,7 +51,7 @@ inline void success(const char* test, const char* expression) {
 void testTypes() {
     auto context = Parser::parseString(JSON_TYPES);
 
-    auto& obj = context.object();
+    const auto& obj = context.object();
     TEST_TRUE(obj["string1"].stringValue() == "Hello");
     TEST_TRUE(obj["string2"].stringValue().empty());
     TEST_TRUE(obj["string3"].stringValue() == "\"Hello\"");
@@ -84,9 +84,38 @@ void testTypes() {
     TEST_TRUE(obj["array"].array()[2].stringValue() == "c");
 }
 
+void testIterators() {
+    auto context = Parser::parseString(JSON_TYPES);
+
+    const auto& obj = context.object();
+    std::string testString;
+    for (auto it : obj) {
+        if (it == "string1") {
+            testString += "ok1";
+        }
+        if (it == "notthere") {
+            testString += "NOTTHERE";
+        }
+        if (it == "string5") {
+            testString += it->stringValue();
+        }
+    }
+    TEST_TRUE(testString == "ok1Hello");
+
+    testString.clear();
+    const auto& arr = context.object()["array"].array();
+    for (auto entity : arr) {
+        testString += entity->stringValue();
+    }
+
+    TEST_TRUE(testString == "abc");
+}
+
+
 int main() {
     try {    
         testTypes();
+        testIterators();
     } catch (const cson::Exception& e) {
         printf("Error: %s\n", e.message().c_str());
         exit(1);
