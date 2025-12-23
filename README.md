@@ -8,7 +8,7 @@ A simple to use C++ JSON parser/writer library.
 * Multi platform support (Linux, MaxOS, Windows, iOS, Android)
 * Optional C style comment support in JSON files
 
-### Example
+## Examples
 
 This example shows how to parse and evaluate the following simple json file:
 
@@ -67,3 +67,25 @@ void writeFile(const std::string& filename) {
     }
 }
 ```
+
+This snippet shows how to iterate arrays:
+
+```cpp
+    auto& arr = someObject["list"].array();
+    for (auto& entity : arr) {
+        printf("Value: %s\n", entity.stringValue());
+    }
+```
+
+Objects can be iterated like this:
+
+```cpp
+    auto& obj = someObject["dict"].array();
+    for (auto it : obj) {
+        if (it == "name") {
+            printf("Name: %s\n", it->stringValue().c_str());
+        }
+    }
+```
+
+
