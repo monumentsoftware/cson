@@ -5,10 +5,10 @@ using namespace cson;
 
 
 void parseFile() {
-    auto json = Parser::parseFile("example1.json");
+    const auto json = Parser::parseFile("example1.json");
     
-    auto& obj = json.object();
-    for (auto& t : obj) {
+    const auto& obj = json.object();
+    for (const auto& t : obj) {
         printf("%s: ", t.key().c_str());
 
         switch (t->type()) {

@@ -1173,11 +1173,23 @@ Entity& JSON::root() {
     return *mRoot;
 }
 
+const Entity& JSON::root() const {
+    return *mRoot;
+}
+
 Object& JSON::object() {
     return mRoot->object();
 }
 
+const Object& JSON::object() const {
+    return mRoot->object();
+}
+
 Array& JSON::array() {
+    return mRoot->array();
+}
+
+const Array& JSON::array() const {
     return mRoot->array();
 }
 

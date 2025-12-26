@@ -204,11 +204,15 @@ public:
 
         Entity* operator->() { return mEntity; }
 
+        const Entity* operator->() const { return mEntity; }
+
         bool operator == (const std::string& key) const { return mKey == key; }
 
         const std::string& key() const { return mKey; }
 
         Entity& entity() { return *mEntity; }
+
+        const Entity& entity() const { return *mEntity; }
 
         std::string mKey;
         Entity* mEntity;
@@ -499,9 +503,15 @@ public:
 
     Entity& root();
 
+    const Entity& root() const;
+
     Object& object();
 
+    const Object& object() const;
+
     Array& array();
+
+    const Array& array() const;
 
 private:
     JSON() = default;
