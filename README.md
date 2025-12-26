@@ -106,9 +106,9 @@ CSON supports C-style comments in objects and arrays:
 }
 ```
 
-Comments are optional and must be enabled when loading a json file.
+Comments are disabled by default and must be enabled when loading a json file that contains any.
 
-Internally, comments are represented as JSON entities. The can be accessed and used like other entities. When writing JSON files, comments are only written if pretty printing is active.
+Internally, comments are represented as JSON entities. They can be accessed like other entities. When writing JSON files, comments are only written if pretty printing is active.
 
 
 
