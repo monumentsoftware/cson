@@ -49,9 +49,9 @@ inline void success(const char* test, const char* expression) {
 }
 
 void testTypes() {
-    auto context = Parser::parseString(JSON_TYPES);
+    auto json = Parser::parseString(JSON_TYPES);
 
-    const auto& obj = context.object();
+    const auto& obj = json.object();
     TEST_TRUE(obj["string1"].stringValue() == "Hello");
     TEST_TRUE(obj["string2"].stringValue().empty());
     TEST_TRUE(obj["string3"].stringValue() == "\"Hello\"");
@@ -85,9 +85,9 @@ void testTypes() {
 }
 
 void testIterators() {
-    auto context = Parser::parseString(JSON_TYPES);
+    auto json = Parser::parseString(JSON_TYPES);
 
-    const auto& obj = context.object();
+    const auto& obj = json.object();
     std::string testString;
     for (auto it : obj) {
         if (it == "string1") {
@@ -103,7 +103,7 @@ void testIterators() {
     TEST_TRUE(testString == "ok1Hello");
 
     testString.clear();
-    const auto& arr = context.object()["array"].array();
+    const auto& arr = json.object()["array"].array();
     for (auto entity : arr) {
         testString += entity->stringValue();
     }

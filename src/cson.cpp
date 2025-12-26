@@ -1163,21 +1163,21 @@ Entity* Comment::clone() const {
     return clone;
 }
 
-JsonContext::JsonContext(std::unique_ptr<Entity> root) : mRoot(std::move(root)) {
+JSON::JSON(std::unique_ptr<Entity> root) : mRoot(std::move(root)) {
 }
 
-JsonContext::~JsonContext() {
+JSON::~JSON() {
 }
 
-Entity& JsonContext::root() {
+Entity& JSON::root() {
     return *mRoot;
 }
 
-Object& JsonContext::object() {
+Object& JSON::object() {
     return mRoot->object();
 }
 
-Array& JsonContext::array() {
+Array& JSON::array() {
     return mRoot->array();
 }
 
@@ -1512,7 +1512,7 @@ String* Parser::parseString() {
     return s;
 }
 
-JsonContext Parser::parse(const char* txt, size_t length) {
+JSON Parser::parse(const char* txt, size_t length) {
     mText = txt;
     mLength = length;
     mPosition = 0;
@@ -1535,36 +1535,36 @@ JsonContext Parser::parse(const char* txt, size_t length) {
     if (mPosition != mLength) {
         throw ParseErrorException(mText, mLength, mPosition, "Extra bytes at end of json");
     }
-    return JsonContext(std::move(root));
+    return JSON(std::move(root));
 }
 
-JsonContext Parser::parse(const char* txt) {
+JSON Parser::parse(const char* txt) {
     return parse(txt, strlen(txt));
 }
 
-JsonContext Parser::parse(const std::string& txt) {
+JSON Parser::parse(const std::string& txt) {
     return parse(txt.c_str());
 }
 
-JsonContext Parser::parseString(const char* txt, bool allowComments) {
+JSON Parser::parseString(const char* txt, bool allowComments) {
     Parser parser;
     parser.allowComments(allowComments);
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseString(const char* txt, size_t length, bool allowComments) {
+JSON Parser::parseString(const char* txt, size_t length, bool allowComments) {
     Parser parser;
     parser.allowComments(allowComments);
     return parser.parse(txt, length);
 }
 
-JsonContext Parser::parseString(const std::string& txt, bool allowComments) {
+JSON Parser::parseString(const std::string& txt, bool allowComments) {
     Parser parser;
     parser.allowComments(allowComments);
     return parser.parse(txt);
 }
 
-JsonContext Parser::parseFile(const std::string& path, bool allowComments) {
+JSON Parser::parseFile(const std::string& path, bool allowComments) {
     struct FileCloser {
         FILE* mFile;
         FileCloser(FILE* f) {

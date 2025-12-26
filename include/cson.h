@@ -490,12 +490,12 @@ private:
     friend class Parser;
 };
 
-class JsonContext {
+class JSON {
 public:
 
-    JsonContext(JsonContext&& ctx) = default;
+    JSON(JSON&& ctx) = default;
 
-    ~JsonContext();
+    ~JSON();
 
     Entity& root();
 
@@ -504,13 +504,13 @@ public:
     Array& array();
 
 private:
-    JsonContext() = default;
+    JSON() = default;
 
-    JsonContext(std::unique_ptr<Entity> root);
+    JSON(std::unique_ptr<Entity> root);
 
-    JsonContext(const JsonContext&) = delete;
+    JSON(const JSON&) = delete;
 
-    void operator=(const JsonContext&) = delete;
+    void operator=(const JSON&) = delete;
 
     std::unique_ptr<Entity> mRoot;
 
@@ -525,16 +525,16 @@ public:
 
     void allowComments(bool allow);
 
-    JsonContext parse(const char* txt);
-    JsonContext parse(const char* txt, size_t length);
-    JsonContext parse(const std::string& txt);
+    JSON parse(const char* txt);
+    JSON parse(const char* txt, size_t length);
+    JSON parse(const std::string& txt);
 
     // static convenience functions
-    static JsonContext parseString(const char* txt, bool allowComments = false);
-    static JsonContext parseString(const char* txt, size_t length, bool allowComments = false);
-    static JsonContext parseString(const std::string& txt, bool allowComments = false);
+    static JSON parseString(const char* txt, bool allowComments = false);
+    static JSON parseString(const char* txt, size_t length, bool allowComments = false);
+    static JSON parseString(const std::string& txt, bool allowComments = false);
 
-    static JsonContext parseFile(const std::string& path, bool allowComments = false);
+    static JSON parseFile(const std::string& path, bool allowComments = false);
 
 private:
     void skipWhitespaces();

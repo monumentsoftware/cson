@@ -5,9 +5,9 @@ using namespace cson;
 
 
 void parseFile() {
-    auto context = Parser::parseFile("example1.json");
+    auto json = Parser::parseFile("example1.json");
     
-    auto& obj = context.object();
+    auto& obj = json.object();
     for (auto& t : obj) {
         printf("%s: ", t.key().c_str());
 
