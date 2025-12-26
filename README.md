@@ -88,4 +88,27 @@ Objects can be iterated like this:
     }
 ```
 
+## Comments
+
+CSON supports C-style comments in objects and arrays:
+
+```cpp
+{
+  // This is a first comment
+  [
+    // This is a second comment
+    "Example": "value",
+    // Another comment
+    "Example2": "value2",
+    // Last comment in array
+  ]
+  // Last comment in object
+}
+```
+
+Comments are optional and must be enabled when loading a json file.
+
+Internally, comments are represented as JSON entities. The can be accessed and used like other entities. When writing JSON files, comments are only written if pretty printing is active.
+
+
 
