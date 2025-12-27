@@ -5,7 +5,7 @@ using namespace cson;
 
 
 void parseFile() {
-    const auto json = Parser::parseFile("example1.json");
+    const auto json = JSON::load("example1.json");
     
     const auto& obj = json.object();
     for (const auto& t : obj) {

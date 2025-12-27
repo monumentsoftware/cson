@@ -5,8 +5,8 @@ void parseFile(const std::string& filename) {
     using namespace cson;
 
     try {
-        const auto context = Parser::parseFile(filename);
-        const auto& rootObject = context.object();
+        const auto json = JSON::load(filename);
+        const auto& rootObject = json.object();
 
         const auto& name = rootObject["name"].stringValue();
         const auto& lastName = rootObject["lastname"].stringValue();

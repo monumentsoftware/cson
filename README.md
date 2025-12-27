@@ -29,8 +29,8 @@ void parseFile(const std::string& filename) {
     using namespace cson;
 
     try {
-        auto context = Parser::parseFile(filename);
-        auto& rootObject = context.object();
+        const auto json = JSON::load(filename);
+        const auto& rootObject = json.object();
 
         const auto& name = rootObject["name"].stringValue();
         const auto& lastName = rootObject["lastname"].stringValue();
@@ -60,7 +60,7 @@ void writeFile(const std::string& filename) {
         object.addString("lastname", "Masters");
         object.addInt("age", 48);
 
-        Writer::writeToFile(filename, object);
+        JSON::save(object, filename);
 
     } catch (const Exception& ex) {
         // handle error
