@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <set>
 
 namespace cson {
 
@@ -496,6 +497,13 @@ private:
 
 class JSON {
 public:
+    enum class Option {
+        enableComments,
+        prettyPrint,
+        indent2Spaces,
+        indent4Spaces,
+        indentTab,
+    };
 
     JSON(JSON&& ctx) = default;
 
@@ -512,6 +520,14 @@ public:
     Array& array();
 
     const Array& array() const;
+
+    static JSON load(const std::string& path, const std::set<Option>& options = {});
+
+    static JSON fromString(const std::string& json, const std::set<Option>& options = {});
+
+    void save(const Entity& entity, const std::string& path, const std::set<Option>& options = {}) const;
+
+    std::string toString(const Entity& entity, const std::set<Option>& options = {}) const;
 
 private:
     JSON() = default;

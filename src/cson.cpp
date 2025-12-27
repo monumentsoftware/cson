@@ -1193,6 +1193,43 @@ const Array& JSON::array() const {
     return mRoot->array();
 }
 
+JSON JSON::load(const std::string& path, const std::set<Option>& options) {
+    const bool enableCommands = options.find(Option::enableComments) != options.end();
+    return Parser::parseFile(path, enableCommands);
+}
+
+JSON JSON::fromString(const std::string& json, const std::set<Option>& options) {
+    const bool enableCommands = options.find(Option::enableComments) != options.end();
+    return Parser::parseString(json, enableCommands);
+}
+
+void JSON::save(const Entity& entity, const std::string& path, const std::set<Option>& options) const {
+    const bool prettyPrint = options.find(Option::prettyPrint) != options.end();
+
+    std::string indent = "  ";
+    if (options.find(Option::indent4Spaces) != options.end()) {
+        indent = "    ";
+    } else if (options.find(Option::indentTab) != options.end()) {
+        indent = "\t";
+    }
+
+    Writer::writeToFile(path, entity, prettyPrint, indent);
+}
+
+std::string JSON::toString(const Entity& entity, const std::set<Option>& options) const {
+    const bool prettyPrint = options.find(Option::prettyPrint) != options.end();
+
+    std::string indent = "  ";
+    if (options.find(Option::indent4Spaces) != options.end()) {
+        indent = "    ";
+    } else if (options.find(Option::indentTab) != options.end()) {
+        indent = "\t";
+    }
+
+    return entity.toString(prettyPrint, indent);
+}
+
+
 Parser::Parser(){
 }
 
