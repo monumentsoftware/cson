@@ -551,6 +551,8 @@ public:
 
     void allowComments(bool allow);
 
+    void setMaxDepth(size_t maxDepth);
+
     JSON parse(const char* txt);
     JSON parse(const char* txt, size_t length);
     JSON parse(const std::string& txt);
@@ -570,11 +572,11 @@ private:
     void readDigits(std::string& dest);
     std::string parseStringLiteral();
 
-    Entity* parseValue();
+    Entity* parseValue(size_t depth);
 
-    Array* parseArray();
+    Array* parseArray(size_t depth);
 
-    Object* parseObject();
+    Object* parseObject(size_t depth);
 
     Number* parseNumber();
 
@@ -586,6 +588,8 @@ private:
     size_t mLength = 0;
     const char* mText = nullptr;
     bool mAllowComments = false;
+
+    size_t mMaxDepth = 64;
 };
 
 class Writer {

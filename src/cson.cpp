@@ -1240,6 +1240,10 @@ void Parser::allowComments(bool allow) {
     mAllowComments = allow;
 }
 
+void Parser::setMaxDepth(size_t maxDepth) {
+    mMaxDepth = maxDepth;
+}
+
 void Parser::skipWhitespaces() {
     while ( mPosition < mLength
            &&
@@ -1388,7 +1392,7 @@ Comment* Parser::parseComment() {
     return comment.release();
 }
 
-Entity* Parser::parseValue() {
+Entity* Parser::parseValue(size_t depth) {
     Entity* data = nullptr;
     if (tryToConsume("\"")) {
         if (tryToConsume("\"")) {
@@ -1400,9 +1404,9 @@ Entity* Parser::parseValue() {
             data = parseString();
         }
     } else if (tryToConsume("[")) {
-        data = parseArray();
+        data = parseArray(depth + 1);
     } else if (tryToConsume("{")) {
-        data = parseObject();
+        data = parseObject(depth + 1);
     } else if (tryToConsume("true")) {
         auto* b = new Boolean();
         b->setBool(true);
@@ -1419,7 +1423,11 @@ Entity* Parser::parseValue() {
     return data;
 }
 
-Array* Parser::parseArray() {
+Array* Parser::parseArray(size_t depth) {
+    if (depth > mMaxDepth) {
+        throw ParseErrorException(mText, mLength, mPosition, "depth limit reached");
+    }
+
     auto arr = std::make_unique<Array>();
     while (true) {
         skipWhitespaces();
@@ -1434,7 +1442,7 @@ Array* Parser::parseArray() {
             break;
         }
 
-        auto* ent = parseValue();
+        auto* ent = parseValue(depth);
         arr->mValues.push_back(ent);
 
         skipWhitespaces();
@@ -1453,7 +1461,11 @@ Array* Parser::parseArray() {
     return arr.release();
 }
 
-Object* Parser::parseObject() {
+Object* Parser::parseObject(size_t depth) {
+    if (depth > mMaxDepth) {
+        throw ParseErrorException(mText, mLength, mPosition, "depth limit reached");
+    }
+
     auto obj = std::make_unique<Object>();
     while (true) {
         skipWhitespaces();
@@ -1471,7 +1483,7 @@ Object* Parser::parseObject() {
         skipWhitespaces();
         consumeOrDie(":");
         skipWhitespaces();
-        auto* ent = parseValue();
+        auto* ent = parseValue(depth);
 
         obj->mEntities.push_back(Object::KeyAndEntity(key, ent));
         obj->mEntityByKey[key] = ent;
@@ -1573,9 +1585,9 @@ JSON Parser::parse(const char* txt, size_t length) {
     }
 
     if (tryToConsume("[")) {
-        root.reset(parseArray());
+        root.reset(parseArray(1));
     } else if (tryToConsume("{")) {
-        root.reset(parseObject());
+        root.reset(parseObject(1));
     } else {
         throw ParseErrorException(mText, mLength, mPosition, "Syntax error");
     }
