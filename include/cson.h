@@ -18,7 +18,7 @@ class Null;
 class Exception {
 public:
     Exception(const char* txt, ...) __attribute__((format(printf, 2, 3)));
-    virtual ~Exception();
+    virtual ~Exception() = default;
 
     const std::string& message() const { return mMessage; }
 
@@ -46,10 +46,9 @@ public:
     }
 };
 
-class ParseErrorException : public Exception {
+class ParseError : public Exception {
 public:
-    ParseErrorException(const char* data, size_t dataLength, size_t position, const char* txt, ...) __attribute__((format(printf, 5, 6)));
-    ~ParseErrorException() override;
+    ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...) __attribute__((format(printf, 5, 6)));
 
     size_t position() const { return mPosition; }
     size_t line() const { return mLine; }
@@ -63,10 +62,10 @@ private:
     std::string mSurrounding; // if possible: 2 lines before error ; error line ; 'marker' line ; 2 lines after error
 };
 
-class IOException : public Exception
+class IOError : public Exception
 {
 public:
-    IOException(const char* txt, ...) __attribute__((format(printf, 2, 3)));
+    IOError(const char* txt, ...) __attribute__((format(printf, 2, 3)));
 };
 
 class Entity {

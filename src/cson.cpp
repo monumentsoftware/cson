@@ -29,10 +29,7 @@ Exception::Exception(const char* txt, ...) {
 Exception::Exception() {
 }
 
-Exception::~Exception() {
-}
-
-ParseErrorException::ParseErrorException(const char* data, size_t dataLength, size_t position, const char* txt, ...)
+ParseError::ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...)
     : Exception(),
       mPosition(position),
       mLine(-1),
@@ -106,10 +103,7 @@ ParseErrorException::ParseErrorException(const char* data, size_t dataLength, si
     }
 }
 
-ParseErrorException::~ParseErrorException() {
-}
-
-IOException::IOException(const char* txt, ...)
+IOError::IOError(const char* txt, ...)
 : Exception() {
     char buf[16384];
     va_list list;
@@ -1257,7 +1251,7 @@ void Parser::skipWhitespaces() {
 
 char Parser::curChar(bool increment) {
     if (mPosition == mLength) {
-        throw ParseErrorException(mText, mLength, mPosition, "Empty input");
+        throw ParseError(mText, mLength, mPosition, "Empty input");
     }
 
     const char c = mText[mPosition];
@@ -1296,7 +1290,7 @@ void Parser::consumeOrDie(const char* txt) {
     size_t origPos = mPosition;
     bool b = tryToConsume(txt);
     if (!b) {
-        throw ParseErrorException(mText, mLength, origPos, "Syntax error: Expected '%s' at or after position %d", txt, static_cast<int>(origPos));
+        throw ParseError(mText, mLength, origPos, "Syntax error: Expected '%s' at or after position %d", txt, static_cast<int>(origPos));
     }
 }
 
@@ -1326,7 +1320,7 @@ std::string Parser::parseStringLiteral() {
     char c = mText[mPosition];
     while (c != '\"') {
         if (mPosition == mLength) {
-            throw ParseErrorException(mText, mLength, origPos, "Closing \" not found");
+            throw ParseError(mText, mLength, origPos, "Closing \" not found");
         }
 
         if (c == '\\'
@@ -1345,7 +1339,7 @@ std::string Parser::parseStringLiteral() {
             case 'u': {
                     mPosition++;
                     if (mPosition + 4 > mLength) {
-                        throw ParseErrorException(mText, mLength, origPos, "Invalid \\u escaping");
+                        throw ParseError(mText, mLength, origPos, "Invalid \\u escaping");
                     }
                     char buf[5];
                     memcpy(buf, &mText[mPosition], 4);
@@ -1365,7 +1359,7 @@ std::string Parser::parseStringLiteral() {
         str += c;
         mPosition++;
         if (mPosition == mLength) {
-            throw ParseErrorException(mText, mLength, origPos, "Closing \" not found");
+            throw ParseError(mText, mLength, origPos, "Closing \" not found");
         }
         c = mText[mPosition];
     }
@@ -1375,7 +1369,7 @@ std::string Parser::parseStringLiteral() {
 
 Comment* Parser::parseComment() {
     if (!mAllowComments) {
-        throw ParseErrorException(mText, mLength, mPosition, "Comments are disabled");
+        throw ParseError(mText, mLength, mPosition, "Comments are disabled");
     }
 
     std::string text;
@@ -1425,7 +1419,7 @@ Entity* Parser::parseValue(size_t depth) {
 
 Array* Parser::parseArray(size_t depth) {
     if (depth > mMaxDepth) {
-        throw ParseErrorException(mText, mLength, mPosition, "depth limit reached");
+        throw ParseError(mText, mLength, mPosition, "depth limit reached");
     }
 
     auto arr = std::make_unique<Array>();
@@ -1463,7 +1457,7 @@ Array* Parser::parseArray(size_t depth) {
 
 Object* Parser::parseObject(size_t depth) {
     if (depth > mMaxDepth) {
-        throw ParseErrorException(mText, mLength, mPosition, "depth limit reached");
+        throw ParseError(mText, mLength, mPosition, "depth limit reached");
     }
 
     auto obj = std::make_unique<Object>();
@@ -1532,7 +1526,7 @@ Number* Parser::parseNumber() {
     } else {
         const char c = curChar();
         if (c < '1' && c > '9') {
-            throw ParseErrorException(mText, mLength, mPosition, "Expecting digit 1...9");
+            throw ParseError(mText, mLength, mPosition, "Expecting digit 1...9");
         }
 
         str += c;
@@ -1553,7 +1547,7 @@ Number* Parser::parseNumber() {
 
         c = curChar();
         if (c != '+' && c != '-') {
-            throw ParseErrorException(mText, mLength, mPosition, "Expecting + or -");
+            throw ParseError(mText, mLength, mPosition, "Expecting + or -");
         }
         str += c;
 
@@ -1581,7 +1575,7 @@ JSON Parser::parse(const char* txt, size_t length) {
     std::unique_ptr<Entity> root;
     skipWhitespaces();
     if (mPosition == mLength) {
-        throw ParseErrorException(mText, mLength, mPosition, "Empty input");
+        throw ParseError(mText, mLength, mPosition, "Empty input");
     }
 
     if (tryToConsume("[")) {
@@ -1589,12 +1583,12 @@ JSON Parser::parse(const char* txt, size_t length) {
     } else if (tryToConsume("{")) {
         root.reset(parseObject(1));
     } else {
-        throw ParseErrorException(mText, mLength, mPosition, "Syntax error");
+        throw ParseError(mText, mLength, mPosition, "Syntax error");
     }
 
     skipWhitespaces();
     if (mPosition != mLength) {
-        throw ParseErrorException(mText, mLength, mPosition, "Extra bytes at end of json");
+        throw ParseError(mText, mLength, mPosition, "Extra bytes at end of json");
     }
     return JSON(std::move(root));
 }
@@ -1639,7 +1633,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
 
     auto* f = fopen(path.c_str(), "rb");
     if (!f) {
-        throw IOException("Failed to open file %s", path.c_str());
+        throw IOError("Failed to open file %s", path.c_str());
     }
 
     FileCloser file(f); // close the file when leaving this method
@@ -1648,7 +1642,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
     long size = ftell(f);
     if (size < 0) {
         int err = errno;
-        throw IOException("Read error in file %s, errno: %d (%s)", path.c_str(), err, strerror(err));
+        throw IOError("Read error in file %s, errno: %d (%s)", path.c_str(), err, strerror(err));
     }
     fseek(f, 0, SEEK_SET);
     char* buf = new char[size];
@@ -1656,7 +1650,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
 
     if (rd != (size_t)size) {
         delete[] buf;
-        throw IOException("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
+        throw IOError("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
     }
     auto context = parseString(buf, size, allowComments);
     delete[] buf;
@@ -1675,14 +1669,14 @@ void Writer::write(const std::string& path, const Entity& ent) {
 
     auto* f = fopen(path.c_str(), "wb");
     if (!f) {
-        throw IOException("Failed to open file for writing");
+        throw IOError("Failed to open file for writing");
     }
 
     size_t wr = fwrite(json.c_str(), 1, json.length(), f);
     fclose(f);
 
     if (wr != json.length()) {
-        throw IOException("Failed to write all bytes to file");
+        throw IOError("Failed to write all bytes to file");
     }
 }
 
