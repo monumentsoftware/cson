@@ -30,6 +30,19 @@ const char* JSON_TYPES = R"JSON(
 }
 )JSON";
 
+const char* JSON_ARRAY_DEPTH = R"JSON(
+    [[[[[[[[[[]]]]]]]]]]
+)JSON";
+
+const char* JSON_OBJECT_DEPTH = R"JSON(
+    {"1":{"2":{"3":{"4":{"5":{"6":{"7":{"8":{"9":{}}}}}}}}}}
+)JSON";
+
+const char* JSON_MIXED_DEPTH = R"JSON(
+    [{"1":[{"2":[{"3":[{"4":[{}]}]}]}]}]
+)JSON";
+
+
 using namespace cson;
 
 
@@ -39,13 +52,38 @@ using namespace cson;
 
 #define TEST_TRUE(expression) (expression) ? SUCCESS("TEST_TRUE", expression) : FAIL("TEST_TRUE", expression)
 
+#define RUN_TEST(func) \
+    printf("running " #func "\n"); \
+    try { \
+        func; \
+    } catch (const Exception& e) { \
+        fail("catched unexpected exception", #func); \
+    } \
+    printf("finished without exception\n");
+
+
+#define RUN_TEST_EXCEPT(func, exception) \
+    { \
+        bool ok = false; \
+        try { \
+            func; \
+        } catch (const exception& ex) { \
+            printf("finished with expected exception %s\n", #exception); \
+            ok = true; \
+        } catch (const Exception& ex) { \
+        } \
+        if (!ok) { \
+            fail("exception not thrown", #func); \
+        } \
+    }
+
 inline void fail(const char* test, const char* expression) {
-    printf("[fail]: %s(%s)\n", test, expression);
+    printf("\t[fail]: %s(%s)\n", test, expression);
     exit(1);
 }
 
 inline void success(const char* test, const char* expression) {
-    printf("[success]: %s(%s)\n", test, expression);
+    printf("\t[success]: %s(%s)\n", test, expression);
 }
 
 void testTypes() {
@@ -84,6 +122,7 @@ void testTypes() {
     TEST_TRUE(obj["array"].array()[2].stringValue() == "c");
 }
 
+
 void testIterators() {
     const auto json = JSON::fromString(JSON_TYPES);
 
@@ -111,14 +150,22 @@ void testIterators() {
     TEST_TRUE(testString == "abc");
 }
 
+void testDepth(const std::string& jsonString, size_t maxDepth) {
+    Parser parser;
+    parser.setMaxDepth(maxDepth);
+
+    parser.parse(jsonString);
+}
+
 
 int main() {
-    try {    
-        testTypes();
-        testIterators();
-    } catch (const cson::Exception& e) {
-        printf("Error: %s\n", e.message().c_str());
-        exit(1);
-    }
+    RUN_TEST(testTypes());
+    RUN_TEST(testIterators());
+    RUN_TEST(testDepth(JSON_ARRAY_DEPTH, 10));
+    RUN_TEST(testDepth(JSON_OBJECT_DEPTH, 10));
+    RUN_TEST(testDepth(JSON_MIXED_DEPTH, 10));
+    RUN_TEST_EXCEPT(testDepth(JSON_ARRAY_DEPTH, 9), TooManyNestings);
+    RUN_TEST_EXCEPT(testDepth(JSON_OBJECT_DEPTH, 9), TooManyNestings);
+    RUN_TEST_EXCEPT(testDepth(JSON_MIXED_DEPTH, 9), TooManyNestings);
     return 0;
 }
