@@ -6,8 +6,13 @@ project(
 
 add_library(cson src/cson.cpp include/cson.h)
 
+# treat warnings as error
+set_property(TARGET cson PROPERTY COMPILE_WARNING_AS_ERROR ON)
+
 # enable c++ 11
 target_compile_features(cson PRIVATE cxx_std_11)
 
 target_include_directories(cson PUBLIC include)
 
+add_subdirectory(examples)
+add_subdirectory(test)
