@@ -29,9 +29,9 @@ Exception::Exception(const char* txt, ...) {
 Exception::Exception() {
 }
 
+
 ParseError::ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...)
-    : Exception(),
-      mPosition(position),
+    : mPosition(position),
       mLine(-1),
       mColumn(-1)
 {
@@ -43,64 +43,76 @@ ParseError::ParseError(const char* data, size_t dataLength, size_t position, con
 
     mMessage = std::string(buf);
 
-    if (data && dataLength > position) {
+    setupSurrounding(data, dataLength, position);
+}
 
-        int currentStartOfLinePos = 0;
-        int prevStartOfLinePos = -1;
-        int prev2StartOfLinePos = -1;
-        size_t line = 1;
-        for (size_t i = 0; i < position; i++) {
-            if (data[i] == '\n') {
-                prev2StartOfLinePos = prevStartOfLinePos;
-                prevStartOfLinePos = currentStartOfLinePos;
-                currentStartOfLinePos = i + 1;
-                line++;
-            }
+void ParseError::setupSurrounding(const char* data, size_t dataLength, size_t position) {
+    if (!data) {
+        return;
+    }
+    if (position >= dataLength) {
+        return;
+    }
+
+    int currentStartOfLinePos = 0;
+    int prevStartOfLinePos = -1;
+    int prev2StartOfLinePos = -1;
+    size_t line = 1;
+    for (size_t i = 0; i < position; i++) {
+        if (data[i] == '\n') {
+            prev2StartOfLinePos = prevStartOfLinePos;
+            prevStartOfLinePos = currentStartOfLinePos;
+            currentStartOfLinePos = i + 1;
+            line++;
         }
+    }
 
-        size_t endPosOfLine = position;
-        for (size_t i = position; (size_t)i < dataLength; i++) {
-            endPosOfLine = i;
-            if (data[i] == '\n')
-            {
+    size_t endPosOfLine = position;
+    for (size_t i = position; (size_t)i < dataLength; i++) {
+        endPosOfLine = i;
+        if (data[i] == '\n')
+        {
+            break;
+        }
+    }
+
+    size_t nextLinesCount = 0;
+    size_t next2LinesEndPos = endPosOfLine;
+    for (size_t i = endPosOfLine + 1; i < dataLength; i++) {
+        next2LinesEndPos = i;
+        if (data[i] == '\n') {
+            nextLinesCount++;
+            if (nextLinesCount >= 2) {
                 break;
             }
         }
-
-        size_t nextLinesCount = 0;
-        size_t next2LinesEndPos = endPosOfLine;
-        for (size_t i = endPosOfLine + 1; i < dataLength; i++) {
-            next2LinesEndPos = i;
-            if (data[i] == '\n') {
-                nextLinesCount++;
-                if (nextLinesCount >= 2) {
-                    break;
-                }
-            }
-        }
-
-        mLine = line;
-        mColumn = (mPosition - currentStartOfLinePos + 1);
-
-        std::string markerLine;
-        if (mColumn > 0) {
-            markerLine = std::string(mColumn - 1, ' ');
-        }
-        markerLine.push_back('^');
-        markerLine.push_back('\n');
-
-        int surroundingStart = prev2StartOfLinePos; // attempt to include 2 previous lines
-        if (surroundingStart < 0) {
-            surroundingStart = prevStartOfLinePos;
-        }
-
-        if (surroundingStart < 0) {
-            surroundingStart = currentStartOfLinePos;
-        }
-        std::string prevAndCurrentText(data + surroundingStart, endPosOfLine - surroundingStart + 1);
-        std::string nextText(data + endPosOfLine + 1, next2LinesEndPos - endPosOfLine);
-        mSurrounding = prevAndCurrentText + markerLine + nextText;
     }
+
+    mLine = line;
+    mColumn = (mPosition - currentStartOfLinePos + 1);
+
+    std::string markerLine;
+    if (mColumn > 0) {
+        markerLine = std::string(mColumn - 1, ' ');
+    }
+    markerLine.push_back('^');
+    markerLine.push_back('\n');
+
+    int surroundingStart = prev2StartOfLinePos; // attempt to include 2 previous lines
+    if (surroundingStart < 0) {
+        surroundingStart = prevStartOfLinePos;
+    }
+
+    if (surroundingStart < 0) {
+        surroundingStart = currentStartOfLinePos;
+    }
+    std::string prevAndCurrentText(data + surroundingStart, endPosOfLine - surroundingStart + 1);
+    std::string nextText(data + endPosOfLine + 1, next2LinesEndPos - endPosOfLine);
+    mSurrounding = prevAndCurrentText + markerLine + nextText;
+}
+
+TooManyNestings::TooManyNestings(const char* data, size_t dataLength, size_t position)
+: ParseError(data, dataLength, position, "Too many nestings") {
 }
 
 IOError::IOError(const char* txt, ...)
@@ -1419,7 +1431,7 @@ Entity* Parser::parseValue(size_t depth) {
 
 Array* Parser::parseArray(size_t depth) {
     if (depth > mMaxDepth) {
-        throw ParseError(mText, mLength, mPosition, "depth limit reached");
+        throw TooManyNestings(mText, mLength, mPosition);
     }
 
     auto arr = std::make_unique<Array>();
@@ -1457,7 +1469,7 @@ Array* Parser::parseArray(size_t depth) {
 
 Object* Parser::parseObject(size_t depth) {
     if (depth > mMaxDepth) {
-        throw ParseError(mText, mLength, mPosition, "depth limit reached");
+        throw TooManyNestings(mText, mLength, mPosition);
     }
 
     auto obj = std::make_unique<Object>();

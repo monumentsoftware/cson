@@ -55,18 +55,26 @@ public:
     size_t column() const { return mColumn; }
     const std::string& surrounding() const { return mSurrounding; }
 
-private:
+protected:
+    void setupSurrounding(const char* data, size_t dataLength, size_t position);
+
     size_t mPosition = 0;
     size_t mLine = 0;
     size_t mColumn = 0;
     std::string mSurrounding; // if possible: 2 lines before error ; error line ; 'marker' line ; 2 lines after error
 };
 
-class IOError : public Exception
-{
+class TooManyNestings : public ParseError {
+public:
+    TooManyNestings(const char* data, size_t dataLength, size_t position);
+};
+
+
+class IOError : public Exception {
 public:
     IOError(const char* txt, ...) __attribute__((format(printf, 2, 3)));
 };
+
 
 class Entity {
 public:
