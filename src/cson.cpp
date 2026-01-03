@@ -1477,7 +1477,10 @@ Object* Parser::parseObject(size_t depth) {
     auto obj = std::make_unique<Object>();
     while (true) {
         skipWhitespaces();
-        if (tryToConsume("}")) {
+
+        // empty object?
+        if (obj->count() == 0
+            && tryToConsume("}")) {
             break;
         }
 
@@ -1503,7 +1506,6 @@ Object* Parser::parseObject(size_t depth) {
             obj->mEntities.push_back(Object::KeyAndEntity("", comment));
             skipWhitespaces();
         }
-
 
         if (!tryToConsume(",")) {
             consumeOrDie("}");
