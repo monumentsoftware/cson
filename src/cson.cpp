@@ -1444,7 +1444,9 @@ Array* Parser::parseArray(size_t depth) {
             skipWhitespaces();
         }
 
-        if (tryToConsume("]")) {
+        // empty array?
+        if (arr->count() == 0
+            && tryToConsume("]")) {
             break;
         }
 
