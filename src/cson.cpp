@@ -1537,7 +1537,7 @@ Number* Parser::parseNumber() {
         str += "0";
     } else {
         const char c = curChar();
-        if (c < '1' && c > '9') {
+        if (c < '1' || c > '9') {
             throw ParseError(mText, mLength, mPosition, "Expecting digit 1...9");
         }
 
