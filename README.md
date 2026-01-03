@@ -93,7 +93,7 @@ Objects can be iterated like this:
 
 CSON supports C-style comments in objects and arrays:
 
-```cpp
+```
 {
   // This is a first comment
   [
@@ -108,6 +108,10 @@ CSON supports C-style comments in objects and arrays:
 ```
 
 Comments are disabled by default and must be enabled when loading a json file that contains any.
+
+```c++
+const auto json = JSON::load(filename, { JSON::Option::enableComments });
+```
 
 Internally, comments are represented as JSON entities. They can be accessed like other entities. When writing JSON files, comments are only written if pretty printing is active.
 
