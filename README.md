@@ -9,6 +9,20 @@ A simple to use C++ JSON parser/writer library.
 * Optional C style comment support in JSON files
 * Permissive MIT license
 
+## Installing
+
+Clone the cson source code, enter the direcotry and run:
+
+```console
+mkdir build
+cd build
+cmake ..
+cmake --build .
+cmake --install .
+```
+
+You can additionally enable examples (-DWITH_EXAMPLES=ON) or selftests (-DWITH_TESTS).
+
 ## Examples
 
 This example shows how to parse and evaluate the following simple json file:
