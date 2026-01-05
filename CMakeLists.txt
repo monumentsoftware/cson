@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...4.1)
+cmake_minimum_required(VERSION 3.23)
 
 
 option(WITH_EXAMPLES "Build examples" OFF)
@@ -8,7 +8,15 @@ project(
   cson
   LANGUAGES CXX)
 
-add_library(cson src/cson.cpp include/cson.h)
+add_library(cson)
+
+target_sources(cson
+    PUBLIC
+        src/cson.cpp
+    PUBLIC FILE_SET HEADERS
+    BASE_DIRS include
+    FILES include/cson.h
+)
 
 # treat warnings as error
 set_property(TARGET cson PROPERTY COMPILE_WARNING_AS_ERROR ON)
@@ -25,3 +33,8 @@ endif()
 if(WITH_TESTS)
     add_subdirectory(test)
 endif()
+
+install(
+    TARGETS cson
+    FILE_SET HEADERS
+)
