@@ -573,7 +573,8 @@ public:
 
 private:
     void skipWhitespaces();
-    char curChar(bool increment = true);
+    char curChar();
+    char consumeChar();
     bool tryToConsume(const char* txt);
     void consumeOrDie(const char* txt);
     size_t readDigits(std::string& dest);

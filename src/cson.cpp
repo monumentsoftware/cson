@@ -1261,15 +1261,23 @@ void Parser::skipWhitespaces() {
     }
 }
 
-char Parser::curChar(bool increment) {
+// returns '\0' if end of the document is reached
+char Parser::curChar() {
+    if (mPosition == mLength) {
+        return 0;
+    }
+
+    const char c = mText[mPosition];
+    return c;
+}
+
+char Parser::consumeChar() {
     if (mPosition == mLength) {
         throw ParseError(mText, mLength, mPosition, "Empty input");
     }
 
     const char c = mText[mPosition];
-    if (increment) {
-        mPosition++;
-    }
+    mPosition++;
     return c;
 }
 
@@ -1438,7 +1446,7 @@ Comment* Parser::parseComment() {
 
     std::string text;
     while (mPosition < mLength) {
-        const auto c = curChar();
+        const auto c = consumeChar();
         if (c == '\n') {
             break;
         }
@@ -1595,7 +1603,7 @@ Number* Parser::parseNumber() {
     if (tryToConsume("0")) {
         str += "0";
     } else {
-        const char c = curChar();
+        const char c = consumeChar();
         if (c < '1' || c > '9') {
             throw ParseError(mText, mLength, mPosition, "Expecting digit 1...9");
         }
@@ -1614,12 +1622,12 @@ Number* Parser::parseNumber() {
     }
 
     // optional exponent part
-    char c = curChar(false);
+    char c = curChar();
     if (c == 'e' || c == 'E') {
         str += c;
         mPosition++;
 
-        c = curChar(false);
+        c = curChar();
         if (c == '+' || c == '-') {
             str += c;
             mPosition++;
@@ -1655,13 +1663,7 @@ JSON Parser::parse(const char* txt, size_t length) {
         throw ParseError(mText, mLength, mPosition, "Empty input");
     }
 
-    if (tryToConsume("[")) {
-        root.reset(parseArray(1));
-    } else if (tryToConsume("{")) {
-        root.reset(parseObject(1));
-    } else {
-        throw ParseError(mText, mLength, mPosition, "Syntax error");
-    }
+    root.reset(parseValue(0));
 
     skipWhitespaces();
     if (mPosition != mLength) {
