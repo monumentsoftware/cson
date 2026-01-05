@@ -576,7 +576,8 @@ private:
     char curChar(bool increment = true);
     bool tryToConsume(const char* txt);
     void consumeOrDie(const char* txt);
-    void readDigits(std::string& dest);
+    size_t readDigits(std::string& dest);
+    uint32_t parse4DigitHexNumber(const char* num);
     std::string parseStringLiteral();
 
     Entity* parseValue(size_t depth);

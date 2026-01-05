@@ -1306,7 +1306,7 @@ void Parser::consumeOrDie(const char* txt) {
     }
 }
 
-static int writeUTF8Chars(char* buf, short unsigned int c) {
+static int writeUTF8Chars(char* buf, uint32_t c) {
     if (c < 128) {
         buf[0] = c;
         return 1;
@@ -1322,6 +1322,35 @@ static int writeUTF8Chars(char* buf, short unsigned int c) {
     }
 }
 
+static int hexDigitToValue(char d) {
+    if (d >= '0' && d <= '9') {
+        return d - '0';
+    }
+
+    if (d >= 'a' && d <= 'f') {
+        return d - 'a' + 10;
+    }
+
+    if (d >= 'A' && d <= 'F') {
+        return d - 'A' + 10;
+    }
+
+    return -1;
+}
+
+uint32_t Parser::parse4DigitHexNumber(const char* num) {
+
+    uint32_t value = 0;
+    for (size_t i = 0; i < 4; i++) {
+        const auto hexValue = hexDigitToValue(num[i]);
+        if (hexValue == -1) {
+            throw ParseError(mText, mLength, mPosition, "Hex digit expected");
+        }
+        value |= hexValue << ((3 - i) * 4);
+    }
+    return value;
+}
+
 // NOTE: does NOT support empty strings, caller needs to check that!
 std::string Parser::parseStringLiteral() {
     std::string str;
@@ -1330,44 +1359,67 @@ std::string Parser::parseStringLiteral() {
     tryToConsume("\""); // NOTE: required because caller *may* have consumed this already, but does not have to. NOTE that due to this, we cannot support empty strings (this call would consume the closing \")
     size_t origPos = mPosition;
     char c = mText[mPosition];
+    size_t utf8ByteCount = 0;
     while (c != '\"') {
         if (mPosition == mLength) {
             throw ParseError(mText, mLength, origPos, "Closing \" not found");
         }
 
-        if (c == '\\'
-            && mPosition + 1 < mLength) {
-            mPosition++;
-            c = mText[mPosition];
-            switch (c) {
-            case 'b': c = '\b'; break;
-            case 'r': c = '\r'; break;
-            case 'n': c = '\n'; break;
-            case 'f': c = '\f'; break;
-            case 't': c = '\t'; break;
-            case '\\': c = '\\'; break;
-            case '/': c = '/'; break;
-            case '\"': c = '\"'; break;
-            case 'u': {
-                    mPosition++;
-                    if (mPosition + 4 > mLength) {
-                        throw ParseError(mText, mLength, origPos, "Invalid \\u escaping");
+        if (utf8ByteCount == 0) {
+            if (c == '\\'
+                && mPosition + 1 < mLength) {
+                mPosition++;
+                c = mText[mPosition];
+                switch (c) {
+                case 'b': c = '\b'; break;
+                case 'r': c = '\r'; break;
+                case 'n': c = '\n'; break;
+                case 'f': c = '\f'; break;
+                case 't': c = '\t'; break;
+                case '\\': c = '\\'; break;
+                case '/': c = '/'; break;
+                case '\"': c = '\"'; break;
+                case 'u': {
+                        mPosition++;
+                        if (mPosition + 4 > mLength) {
+                            throw ParseError(mText, mLength, origPos, "Invalid \\u escaping");
+                        }
+                        const uint32_t utf8Char = parse4DigitHexNumber(&mText[mPosition]);
+                        char utf8Buf[16];
+                        int len = writeUTF8Chars(utf8Buf, utf8Char);
+                        for (int i = 0; i < len-1; i++) {
+                            str += utf8Buf[i];
+                        }
+                        c = utf8Buf[len-1];
+                        mPosition += 3;
                     }
-                    char buf[5];
-                    memcpy(buf, &mText[mPosition], 4);
-                    buf[4] = 0;
-                    int utf8Char = (int)strtol(buf, NULL, 16);
-                    char utf8Buf[16];
-                    int len = writeUTF8Chars(utf8Buf, utf8Char);
-                    for (int i = 0; i < len-1; i++) {
-                        str += utf8Buf[i];
-                    }
-                    c = utf8Buf[len-1];
-                    mPosition += 3;
+                    break;
+                default:
+                    throw ParseError(mText, mLength, origPos, "Invalid character after escape character");
                 }
-                break;
+            } else {
+                if ((c & 0b10000000) == 0) {
+                    utf8ByteCount = 0;
+                    if (c < 32) {
+                        throw ParseError(mText, mLength, mPosition, "Control character in string literal");
+                    }
+                } else if ((c & 0b11110000) == 0b11110000) {
+                    utf8ByteCount = 3;
+                } else if ((c & 0b11100000) == 0b11100000) {
+                    utf8ByteCount = 2;
+                } else if ((c & 0b11000000) == 0b11000000) {
+                    utf8ByteCount = 1;
+                } else {
+                    throw ParseError(mText, mLength, origPos, "Invalid utf8 code point");
+                }
+                }
+        } else if (utf8ByteCount > 0) {
+            if ((c & 0b10000000) != 0b10000000) {
+                throw ParseError(mText, mLength, origPos, "Invalid UTF8 code point");
             }
+            utf8ByteCount--;
         }
+
         str += c;
         mPosition++;
         if (mPosition == mLength) {
@@ -1517,7 +1569,8 @@ Object* Parser::parseObject(size_t depth) {
     return obj.release();
 }
 
-void Parser::readDigits(std::string& dest) {
+size_t Parser::readDigits(std::string& dest) {
+    size_t count = 0;
     while (mPosition < mLength) {
         char c = mText[mPosition];
         if (c < '0' || c > '9') {
@@ -1525,7 +1578,9 @@ void Parser::readDigits(std::string& dest) {
         }
         dest += c;
         mPosition++;
+        count++;
     }
+    return count;
 }
 
 Number* Parser::parseNumber() {
@@ -1552,7 +1607,10 @@ Number* Parser::parseNumber() {
     // optional fraction part
     if (tryToConsume(".")) {
         str += ".";
-        readDigits(str);
+        const auto count = readDigits(str);
+        if (count == 0) {
+            throw ParseError(mText, mLength, mPosition, "Expecting 0..9");
+        }
     }
 
     // optional exponent part
@@ -1561,13 +1619,16 @@ Number* Parser::parseNumber() {
         str += c;
         mPosition++;
 
-        c = curChar();
-        if (c != '+' && c != '-') {
-            throw ParseError(mText, mLength, mPosition, "Expecting + or -");
+        c = curChar(false);
+        if (c == '+' || c == '-') {
+            str += c;
+            mPosition++;
         }
-        str += c;
 
-        readDigits(str);
+        const auto count = readDigits(str);
+        if (count == 0) {
+            throw ParseError(mText, mLength, mPosition, "Expecting 0..9");
+        }
     }
 
     num->mNumber = str;
