@@ -1,21 +1,23 @@
 #include <cson.h>
 #include <stdio.h>
 
-
 const char* JSON_TYPES = R"JSON(
 {
     "string1": "Hello",
     "string2": "",
-    "string3": "\"\Hello\"",
+    "string3": "\"Hello\"",
     "string4": "\\\/\b\f\n\r\t",
     "string5": "\u0048ello",
+    "string6": "\u0394",
+    "string7": "\u263A",
 
     "num1": 1,
     "num2": 1.5,
     "num3": 0.5,
     "num4": -1,
-    "num5": 1.1e+2,
-    "num6": 5e-1,
+    "num5": 1.1e2,
+    "num6": 1.1e+2,
+    "num7": 5e-1,
 
     "bool1": true,
     "bool2": false,
@@ -57,6 +59,7 @@ using namespace cson;
     try { \
         func; \
     } catch (const Exception& e) { \
+        printf("catched %s\n", e.message().c_str()); \
         fail("catched unexpected exception", #func); \
     } \
     printf("finished without exception\n");
@@ -87,6 +90,7 @@ inline void success(const char* test, const char* expression) {
 }
 
 void testTypes() {
+
     const auto json = JSON::fromString(JSON_TYPES);
 
     const auto& obj = json.object();
@@ -95,7 +99,14 @@ void testTypes() {
     TEST_TRUE(obj["string3"].stringValue() == "\"Hello\"");
     TEST_TRUE(obj["string4"].stringValue() == "\\/\b\f\n\r\t");
     TEST_TRUE(obj["string5"].stringValue() == "Hello");
-    
+    const auto str6 = obj["string6"].stringValue();
+    const auto* data = reinterpret_cast<const uint8_t*>(str6.c_str());
+    TEST_TRUE(data[0] == 0xce && data[1] == 0x94);
+
+    const auto str7 = obj["string7"].stringValue();
+    const auto* data2 = reinterpret_cast<const uint8_t*>(str7.c_str());
+    TEST_TRUE(data2[0] == 0xe2 && data2[1] == 0x98 && data2[2] == 0xba);
+
     TEST_TRUE(obj["num1"].intValue() == 1);
     TEST_TRUE(obj["num1"].floatValue() == 1);
     TEST_TRUE(obj["num1"].doubleValue() == 1);
@@ -108,8 +119,10 @@ void testTypes() {
     TEST_TRUE(obj["num4"].doubleValue() == -1);
     TEST_TRUE(obj["num5"].floatValue() == 110);
     TEST_TRUE(obj["num5"].doubleValue() == 110);
-    TEST_TRUE(obj["num6"].floatValue() == 0.5);
-    TEST_TRUE(obj["num6"].doubleValue() == 0.5);
+    TEST_TRUE(obj["num6"].floatValue() == 110);
+    TEST_TRUE(obj["num6"].doubleValue() == 110);
+    TEST_TRUE(obj["num7"].floatValue() == 0.5);
+    TEST_TRUE(obj["num7"].doubleValue() == 0.5);
 
     TEST_TRUE(obj["bool1"].boolValue() == true);
     TEST_TRUE(obj["bool2"].boolValue() == false);
