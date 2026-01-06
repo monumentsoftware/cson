@@ -17,7 +17,11 @@ class Null;
 
 class Exception {
 public:
-    Exception(const char* txt, ...) __attribute__((format(printf, 2, 3)));
+    Exception(const char* txt, ...)
+#ifndef _MSC_VER
+    __attribute__((format(printf, 2, 3)))
+#endif
+    ;
     virtual ~Exception() = default;
 
     const std::string& message() const { return mMessage; }
@@ -48,7 +52,11 @@ public:
 
 class ParseError : public Exception {
 public:
-    ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...) __attribute__((format(printf, 5, 6)));
+    ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...)
+#ifndef _MSC_VER
+    __attribute__((format(printf, 5, 6)))
+#endif
+    ;
 
     size_t position() const { return mPosition; }
     size_t line() const { return mLine; }
