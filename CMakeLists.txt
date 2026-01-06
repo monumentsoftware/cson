@@ -8,6 +8,12 @@ project(
   cson
   LANGUAGES CXX)
 
+
+if (MSVC)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
+endif()
+
 add_library(cson)
 
 target_sources(cson

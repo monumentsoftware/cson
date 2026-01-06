@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <limits>
 
 #ifndef _WIN32
 #define MJSONvsprintf(str, size, format, args) vsnprintf(str, size, format, args)
@@ -31,9 +32,7 @@ Exception::Exception() {
 
 
 ParseError::ParseError(const char* data, size_t dataLength, size_t position, const char* txt, ...)
-    : mPosition(position),
-      mLine(-1),
-      mColumn(-1)
+    : mPosition(position)
 {
     char buf[16384];
     va_list list;
@@ -54,9 +53,9 @@ void ParseError::setupSurrounding(const char* data, size_t dataLength, size_t po
         return;
     }
 
-    int currentStartOfLinePos = 0;
-    int prevStartOfLinePos = -1;
-    int prev2StartOfLinePos = -1;
+    size_t currentStartOfLinePos = 0;
+    size_t prevStartOfLinePos = std::numeric_limits<size_t>::max();
+    size_t prev2StartOfLinePos = std::numeric_limits<size_t>::max();
     size_t line = 1;
     for (size_t i = 0; i < position; i++) {
         if (data[i] == '\n') {
@@ -98,12 +97,12 @@ void ParseError::setupSurrounding(const char* data, size_t dataLength, size_t po
     markerLine.push_back('^');
     markerLine.push_back('\n');
 
-    int surroundingStart = prev2StartOfLinePos; // attempt to include 2 previous lines
-    if (surroundingStart < 0) {
+    size_t surroundingStart = prev2StartOfLinePos; // attempt to include 2 previous lines
+    if (surroundingStart == std::numeric_limits<size_t>::max()) {
         surroundingStart = prevStartOfLinePos;
     }
 
-    if (surroundingStart < 0) {
+    if (surroundingStart == std::numeric_limits<size_t>::max()) {
         surroundingStart = currentStartOfLinePos;
     }
     std::string prevAndCurrentText(data + surroundingStart, endPosOfLine - surroundingStart + 1);
@@ -127,7 +126,7 @@ IOError::IOError(const char* txt, ...)
 }
 
 static std::string EscapeString(const std::string& str) {
-    int escapeCount = 0;
+    size_t escapeCount = 0;
     for (std::string::size_type i = 0; i < str.length(); i++) {
         char c = str[i];
         if (c == '\b' ||
@@ -327,7 +326,7 @@ int Entity::intValue() const {
 }
 
 float Entity::floatValue() const {
-    return doubleValue();
+    return static_cast<float>(doubleValue());
 }
 
 double Entity::doubleValue() const {
@@ -479,7 +478,7 @@ void Array::removeAtIndex(size_t index) {
     }
     auto* ent = mValues[index];
     delete ent;
-    mValues.erase(mValues.begin() + index);
+    mValues.erase(std::next(mValues.begin(), static_cast<std::vector<Entity*>::difference_type>(index)));
 }
 
 Array& Array::addArray() {
@@ -1316,16 +1315,16 @@ void Parser::consumeOrDie(const char* txt) {
 
 static int writeUTF8Chars(char* buf, uint32_t c) {
     if (c < 128) {
-        buf[0] = c;
+        buf[0] = static_cast<char>(c);
         return 1;
     } else if (c < 2048) {
-        buf[0] = 0xc0 | ((c >> 6) & 0xff);
-        buf[1] = 0x80 | (c & 63);
+        buf[0] = static_cast<char>(0xc0 | ((c >> 6) & 0xff));
+        buf[1] = static_cast<char>(0x80 | (c & 63));
         return 2;
     } else {
-        buf[0] = 0xe0 | ((c >> 12) & 0xff);
-        buf[1] = 0x80 | ((c >> 6)  & 63);
-        buf[2] = 0x80 | (c & 63);
+        buf[0] = static_cast<char>(0xe0 | ((c >> 12) & 0xff));
+        buf[1] = static_cast<char>(0x80 | ((c >> 6)  & 63));
+        buf[2] = static_cast<char>(0x80 | (c & 63));
         return 3;
     }
 }
@@ -1354,7 +1353,7 @@ uint32_t Parser::parse4DigitHexNumber(const char* num) {
         if (hexValue == -1) {
             throw ParseError(mText, mLength, mPosition, "Hex digit expected");
         }
-        value |= hexValue << ((3 - i) * 4);
+        value |= static_cast<uint32_t>(hexValue) << ((3 - i) * 4);
     }
     return value;
 }
@@ -1718,20 +1717,20 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
     FileCloser file(f); // close the file when leaving this method
 
     fseek(f, 0, SEEK_END);
-    long size = ftell(f);
+    const long size = ftell(f);
     if (size < 0) {
         int err = errno;
         throw IOError("Read error in file %s, errno: %d (%s)", path.c_str(), err, strerror(err));
     }
     fseek(f, 0, SEEK_SET);
-    char* buf = new char[size];
-    size_t rd = fread(buf, 1, size, f);
+    char* buf = new char[static_cast<size_t>(size)];
+    size_t rd = fread(buf, 1, static_cast<size_t>(size), f);
 
     if (rd != (size_t)size) {
         delete[] buf;
         throw IOError("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
     }
-    auto context = parseString(buf, size, allowComments);
+    auto context = parseString(buf, static_cast<size_t>(size), allowComments);
     delete[] buf;
     return context;
 }
