@@ -11,7 +11,7 @@ project(
 
 if (MSVC)
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wunused -Wextra")
 endif()
 
 add_library(cson)

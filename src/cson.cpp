@@ -425,7 +425,11 @@ double Number::valueDouble() const {
     return v;
 }
 
-std::string Number::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Number::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
+    (void)prettyPrint;
+    (void)indentation;
+    (void)level;
+
     return mNumber;
 }
 
@@ -449,7 +453,11 @@ void String::setString(const std::string& str) {
     mValue = str;
 }
 
-std::string String::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string String::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
+    (void)prettyPrint;
+    (void)indentation;
+    (void)level;
+
     std::string s;
     s += "\"";
     s += EscapeString(mValue);
@@ -559,7 +567,7 @@ static void writeCommaIfNeeded(std::string& str, const std::vector<Entity*>& ent
     }
 }
 
-std::string Array::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Array::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
 
     std::string s = "[";
     if (prettyPrint) {
@@ -616,18 +624,30 @@ Number& Array::numberAtIndex(size_t index) const
 
 int Array::intValueAtIndex(size_t index, int defaultValue) const
 {
+    if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+        return defaultValue;
+    }
+
     auto& number = numberAtIndex(index);
     return number.valueInt();
 }
 
 float Array::floatValueAtIndex(size_t index, float defaultValue) const
 {
+    if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+        return defaultValue;
+    }
+
     auto& number = numberAtIndex(index);
     return number.valueFloat();
 }
 
 double Array::doubleValueAtIndex(size_t index, double defaultValue) const
 {
+    if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+        return defaultValue;
+    }
+
     auto& number = numberAtIndex(index);
     return number.valueDouble();
 }
@@ -674,6 +694,10 @@ Boolean& Array::boolAtIndex(size_t index) const
 
 bool Array::boolValueAtIndex(size_t index, bool defaultValue) const
 {
+    if (index >= count() || !mValues[index] || !mValues[index]->isBoolean()) {
+        return defaultValue;
+    }
+
     auto& b = boolAtIndex(index);
     return b.value();
 }
@@ -928,11 +952,11 @@ static void writeCommaIfNeeded(std::string& str, const std::vector<Object::KeyAn
     }
 }
 
-std::string Object::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Object::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
     std::string s;
     if (prettyPrint) {
         std::string prefix;
-        for (int i = 0; i < level; i++) {
+        for (size_t i = 0; i < level; i++) {
             prefix += indentation;
         }
 
@@ -1111,25 +1135,6 @@ Entity* Object::clone() const
     return clone;
 }
 
-void Object::mergeFrom(const Object& obj, bool overwrite)
-{
-
-    #if 0
-    for (auto it = obj.mValues.begin(); it != obj.mValues.end(); ++it) {
-        const std::string& key = it->first;
-        if (contains(key.c_str())) {
-            if (!overwrite) {
-                continue;
-            }
-            delete mValues[key];
-        } else {
-            mMemberNameByIndex.push_back(key);
-        }
-        mValues[key] = it->second->clone();
-    }
-    #endif
-}
-
 Boolean::Boolean() {
 }
 
@@ -1140,7 +1145,11 @@ void Boolean::setBool(bool b) {
     mValue = b;
 }
 
-std::string Boolean::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Boolean::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
+    (void)prettyPrint;
+    (void)indentation;
+    (void)level;
+
     return mValue ? std::string("true") : std::string("false");
 }
 
@@ -1150,7 +1159,11 @@ Entity* Boolean::clone() const {
     return clone;
 }
 
-std::string Null::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Null::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
+    (void)prettyPrint;
+    (void)indentation;
+    (void)level;
+
     return std::string("null");
 }
 
@@ -1158,7 +1171,11 @@ Entity* Null::clone() const {
     return new Null();
 }
 
-std::string Comment::toString(bool prettyPrint, const std::string& indentation, int level) const {
+std::string Comment::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
+    (void)prettyPrint;
+    (void)indentation;
+    (void)level;
+
     return std::string("//") + mText;
 }
 
@@ -1735,7 +1752,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
     return context;
 }
 
-Writer::Writer(bool prettyPrint, const std::string& indentation, int level)
+Writer::Writer(bool prettyPrint, const std::string& indentation, size_t level)
 : mPrettyPrint(prettyPrint),
   mIndentation(indentation),
   mLevel(level)
@@ -1758,7 +1775,7 @@ void Writer::write(const std::string& path, const Entity& ent) {
     }
 }
 
-void Writer::writeToFile(const std::string& path, const Entity& ent, bool prettyPrint, const std::string& indentation, int level) {
+void Writer::writeToFile(const std::string& path, const Entity& ent, bool prettyPrint, const std::string& indentation, size_t level) {
 
     Writer writer(prettyPrint, indentation, level);
     writer.write(path, ent);

@@ -137,7 +137,7 @@ public:
     Entity& operator[] (size_t idx);
     Entity& operator[] (const std::string& key);
 
-    virtual std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const = 0;
+    virtual std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const = 0;
     virtual Entity* clone() const = 0;
 protected:
     static std::string s_EmptyString;
@@ -198,11 +198,9 @@ public:
     Entity& entityAtIndex(size_t idx);
     const Entity& entityAtIndex(size_t idx) const;
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
 
     Entity* clone() const override;
-
-    void mergeFrom(const Object& obj, bool overwrite);
 
     struct KeyAndEntity {
         KeyAndEntity() = default;
@@ -333,7 +331,7 @@ public:
     Entity& entityAtIndex(size_t index);
     const Entity& entityAtIndex(size_t index) const;
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
     Entity* clone() const override;
 
     size_t count() const override{ return mValues.size(); }
@@ -422,7 +420,7 @@ public:
     void setString(const char* str);
     void setString(const std::string& str);
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
     Entity* clone() const override;
 
     const std::string& value() const { return mValue; }
@@ -442,7 +440,7 @@ public:
     void setDouble(double d);
     void setString(const std::string& num);
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
     Entity* clone() const override;
 
     const std::string& value() const { return mNumber; }
@@ -464,7 +462,7 @@ public:
 
     void setBool(bool b);
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
 
     Entity* clone() const override;
 
@@ -480,7 +478,7 @@ public:
 
     Type type() const override { return Type::null; }
 
-    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
 
     Entity* clone() const override;
 
@@ -492,7 +490,7 @@ class Comment : public Entity {
 public:
     Type type() const override { return Type::comment; }
 
-    std::string toString(bool prettyPrint = true, const std::string& identation = {"  "}, int level = 0) const override;
+    std::string toString(bool prettyPrint = true, const std::string& identation = {"  "}, size_t level = 0) const override;
 
     Entity* clone() const override;
 private:
@@ -603,17 +601,17 @@ private:
 
 class Writer {
 public:
-    Writer(bool prettyPrint = true, const std::string& indentation = std::string("  "), int level = 0);
+    Writer(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0);
 
     void write(const std::string& path, const Entity& ent);
 
-    static void writeToFile(const std::string& path, const Entity& ent, bool prettyPrint = true, const std::string& indentation = {"  "}, int level = 0);
+    static void writeToFile(const std::string& path, const Entity& ent, bool prettyPrint = true, const std::string& indentation = {"  "}, size_t level = 0);
 private:
     bool mPrettyPrint = false;
 
     std::string mIndentation;
 
-    int mLevel = 0;
+    size_t mLevel = 0;
 };
 
 } // cson
