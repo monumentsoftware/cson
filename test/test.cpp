@@ -141,7 +141,7 @@ void testIterators() {
 
     const auto& obj = json.object();
     std::string testString;
-    for (const auto it : obj) {
+    for (const auto& it : obj) {
         if (it == "string1") {
             testString += "ok1";
         }
