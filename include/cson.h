@@ -80,7 +80,11 @@ public:
 
 class IOError : public Exception {
 public:
-    IOError(const char* txt, ...) __attribute__((format(printf, 2, 3)));
+    IOError(const char* txt, ...)
+#ifndef _MSC_VER
+    __attribute__((format(printf, 2, 3)))
+#endif
+    ;
 };
 
 
