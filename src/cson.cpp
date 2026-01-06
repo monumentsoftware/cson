@@ -617,7 +617,7 @@ Number& Array::numberAtIndex(size_t index) const
         throw OutOfBounds();
     }
     if (!mValues[index] || !mValues[index]->isNumber()) {
-        throw Exception("");
+        throw Exception("Entity is not a number");
     }
     return *static_cast<Number*>(mValues[index]);
 }
