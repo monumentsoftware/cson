@@ -1,5 +1,10 @@
 #include <cson.h>
 #include <stdio.h>
+#include <gtest/gtest.h>
+
+class DepthTests : public testing::TestWithParam<std::tuple<std::string, size_t>>
+{
+};
 
 const char* JSON_TYPES = R"JSON(
 {
@@ -48,95 +53,56 @@ const char* JSON_MIXED_DEPTH = R"JSON(
 using namespace cson;
 
 
-#define FAIL(test, expression) fail(test, #expression)
-
-#define SUCCESS(test, expression) success(test, #expression)
-
-#define TEST_TRUE(expression) (expression) ? SUCCESS("TEST_TRUE", expression) : FAIL("TEST_TRUE", expression)
-
-#define RUN_TEST(func) \
-    printf("running " #func "\n"); \
-    try { \
-        func; \
-    } catch (const Exception& e) { \
-        printf("catched %s\n", e.message().c_str()); \
-        fail("catched unexpected exception", #func); \
-    } \
-    printf("finished without exception\n");
-
-
-#define RUN_TEST_EXCEPT(func, exception) \
-    { \
-        bool ok = false; \
-        try { \
-            func; \
-        } catch (const exception& ex) { \
-            printf("finished with expected exception %s\n", #exception); \
-            ok = true; \
-        } catch (const Exception& ex) { \
-        } \
-        if (!ok) { \
-            fail("exception not thrown", #func); \
-        } \
-    }
-
-inline void fail(const char* test, const char* expression) {
-    printf("\t[fail]: %s(%s)\n", test, expression);
-    exit(1);
-}
-
-inline void success(const char* test, const char* expression) {
-    printf("\t[success]: %s(%s)\n", test, expression);
-}
-
-void testTypes() {
-
+TEST(CsonTests, testTypes) {
     const auto json = JSON::fromString(JSON_TYPES);
 
     const auto& obj = json.object();
-    TEST_TRUE(obj["string1"].stringValue() == "Hello");
-    TEST_TRUE(obj["string2"].stringValue().empty());
-    TEST_TRUE(obj["string3"].stringValue() == "\"Hello\"");
-    TEST_TRUE(obj["string4"].stringValue() == "\\/\b\f\n\r\t");
-    TEST_TRUE(obj["string5"].stringValue() == "Hello");
+    EXPECT_EQ(obj["string1"].stringValue(), "Hello");
+    EXPECT_TRUE(obj["string2"].stringValue().empty());
+    EXPECT_EQ(obj["string3"].stringValue(), "\"Hello\"");
+    EXPECT_EQ(obj["string4"].stringValue(), "\\/\b\f\n\r\t");
+    EXPECT_EQ(obj["string5"].stringValue(), "Hello");
     const auto str6 = obj["string6"].stringValue();
     const auto* data = reinterpret_cast<const uint8_t*>(str6.c_str());
-    TEST_TRUE(data[0] == 0xce && data[1] == 0x94);
+    EXPECT_EQ(data[0], 0xce);
+    EXPECT_EQ(data[1], 0x94);
 
     const auto str7 = obj["string7"].stringValue();
     const auto* data2 = reinterpret_cast<const uint8_t*>(str7.c_str());
-    TEST_TRUE(data2[0] == 0xe2 && data2[1] == 0x98 && data2[2] == 0xba);
+    EXPECT_EQ(data2[0], 0xe2);
+    EXPECT_EQ(data2[1], 0x98);
+    EXPECT_EQ(data2[2], 0xba);
 
-    TEST_TRUE(obj["num1"].intValue() == 1);
-    TEST_TRUE(obj["num1"].floatValue() == 1);
-    TEST_TRUE(obj["num1"].doubleValue() == 1);
-    TEST_TRUE(obj["num2"].floatValue() == 1.5);
-    TEST_TRUE(obj["num2"].doubleValue() == 1.5);
-    TEST_TRUE(obj["num3"].floatValue() == 0.5);
-    TEST_TRUE(obj["num3"].doubleValue() == 0.5);
-    TEST_TRUE(obj["num4"].intValue() == -1);
-    TEST_TRUE(obj["num4"].floatValue() == -1);
-    TEST_TRUE(obj["num4"].doubleValue() == -1);
-    TEST_TRUE(obj["num5"].floatValue() == 110);
-    TEST_TRUE(obj["num5"].doubleValue() == 110);
-    TEST_TRUE(obj["num6"].floatValue() == 110);
-    TEST_TRUE(obj["num6"].doubleValue() == 110);
-    TEST_TRUE(obj["num7"].floatValue() == 0.5);
-    TEST_TRUE(obj["num7"].doubleValue() == 0.5);
+    EXPECT_EQ(obj["num1"].intValue(), 1);
+    EXPECT_EQ(obj["num1"].floatValue(), 1);
+    EXPECT_EQ(obj["num1"].doubleValue(), 1);
+    EXPECT_EQ(obj["num2"].floatValue(), 1.5);
+    EXPECT_EQ(obj["num2"].doubleValue(), 1.5);
+    EXPECT_EQ(obj["num3"].floatValue(), 0.5);
+    EXPECT_EQ(obj["num3"].doubleValue(), 0.5);
+    EXPECT_EQ(obj["num4"].intValue(), -1);
+    EXPECT_EQ(obj["num4"].floatValue(), -1);
+    EXPECT_EQ(obj["num4"].doubleValue(), -1);
+    EXPECT_EQ(obj["num5"].floatValue(), 110);
+    EXPECT_EQ(obj["num5"].doubleValue(), 110);
+    EXPECT_EQ(obj["num6"].floatValue(), 110);
+    EXPECT_EQ(obj["num6"].doubleValue(), 110);
+    EXPECT_EQ(obj["num7"].floatValue(), 0.5);
+    EXPECT_EQ(obj["num7"].doubleValue(), 0.5);
 
-    TEST_TRUE(obj["bool1"].boolValue() == true);
-    TEST_TRUE(obj["bool2"].boolValue() == false);
+    EXPECT_EQ(obj["bool1"].boolValue(), true);
+    EXPECT_EQ(obj["bool2"].boolValue(), false);
 
-    TEST_TRUE(obj["null"].isNull());
+    EXPECT_TRUE(obj["null"].isNull());
 
-    TEST_TRUE(obj["array"].array().count() == 3);
-    TEST_TRUE(obj["array"].array()[0].stringValue() == "a");
-    TEST_TRUE(obj["array"].array()[1].stringValue() == "b");
-    TEST_TRUE(obj["array"].array()[2].stringValue() == "c");
+    EXPECT_EQ(obj["array"].array().count(), 3);
+    EXPECT_EQ(obj["array"].array()[0].stringValue(), "a");
+    EXPECT_EQ(obj["array"].array()[1].stringValue(), "b");
+    EXPECT_EQ(obj["array"].array()[2].stringValue(), "c");
 }
 
 
-void testIterators() {
+TEST(CsonTests, testIterators) {
     const auto json = JSON::fromString(JSON_TYPES);
 
     const auto& obj = json.object();
@@ -152,7 +118,7 @@ void testIterators() {
             testString += it->stringValue();
         }
     }
-    TEST_TRUE(testString == "ok1Hello");
+    EXPECT_EQ(testString, "ok1Hello");
 
     testString.clear();
     const auto& arr = json.object()["array"].array();
@@ -160,25 +126,36 @@ void testIterators() {
         testString += entity->stringValue();
     }
 
-    TEST_TRUE(testString == "abc");
+    EXPECT_EQ(testString, "abc");
 }
 
-void testDepth(const std::string& jsonString, size_t maxDepth) {
+TEST_P(DepthTests, testDepth) {
+    const auto& jsonString = std::get<0>(GetParam());
+    const auto& maxValidDepth = std::get<1>(GetParam());
     Parser parser;
-    parser.setMaxDepth(maxDepth);
+    parser.setMaxDepth(maxValidDepth);
 
-    parser.parse(jsonString);
+    EXPECT_NO_THROW({
+        parser.parse(jsonString);
+    });
 }
 
+TEST_P(DepthTests, testDepthException) {
+    const auto& jsonString = std::get<0>(GetParam());
+    const auto& maxValidDepth = std::get<1>(GetParam());
+    Parser parser;
+    parser.setMaxDepth(maxValidDepth - 1);
 
-int main() {
-    RUN_TEST(testTypes());
-    RUN_TEST(testIterators());
-    RUN_TEST(testDepth(JSON_ARRAY_DEPTH, 10));
-    RUN_TEST(testDepth(JSON_OBJECT_DEPTH, 10));
-    RUN_TEST(testDepth(JSON_MIXED_DEPTH, 10));
-    RUN_TEST_EXCEPT(testDepth(JSON_ARRAY_DEPTH, 9), TooManyNestings);
-    RUN_TEST_EXCEPT(testDepth(JSON_OBJECT_DEPTH, 9), TooManyNestings);
-    RUN_TEST_EXCEPT(testDepth(JSON_MIXED_DEPTH, 9), TooManyNestings);
-    return 0;
+    EXPECT_THROW({
+        parser.parse(jsonString);
+    }, TooManyNestings);
 }
+
+INSTANTIATE_TEST_SUITE_P(CsonTests, // suite name
+                         DepthTests, // fixture class
+                         testing::Values(
+                             std::make_tuple(JSON_ARRAY_DEPTH, 10),
+                             std::make_tuple(JSON_OBJECT_DEPTH, 10),
+                             std::make_tuple(JSON_MIXED_DEPTH, 10)
+                         )
+);
