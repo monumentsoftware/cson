@@ -69,8 +69,7 @@ void ParseError::setupSurrounding(const char* data, size_t dataLength, size_t po
     size_t endPosOfLine = position;
     for (size_t i = position; (size_t)i < dataLength; i++) {
         endPosOfLine = i;
-        if (data[i] == '\n')
-        {
+        if (data[i] == '\n') {
             break;
         }
     }
@@ -603,16 +602,14 @@ std::string Array::toString(bool prettyPrint, const std::string& indentation, si
     return s;
 }
 
-const std::string& Array::stringValueAtIndex(size_t index, const std::string& defaultValue) const
-{
+const std::string& Array::stringValueAtIndex(size_t index, const std::string& defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isString()) {
         return defaultValue;
     }
     return static_cast<String*>(mValues[index])->value();
 }
 
-Number& Array::numberAtIndex(size_t index) const
-{
+Number& Array::numberAtIndex(size_t index) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         throw OutOfBounds();
     }
@@ -622,8 +619,7 @@ Number& Array::numberAtIndex(size_t index) const
     return *static_cast<Number*>(mValues[index]);
 }
 
-int Array::intValueAtIndex(size_t index, int defaultValue) const
-{
+int Array::intValueAtIndex(size_t index, int defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         return defaultValue;
     }
@@ -632,8 +628,7 @@ int Array::intValueAtIndex(size_t index, int defaultValue) const
     return number.valueInt();
 }
 
-float Array::floatValueAtIndex(size_t index, float defaultValue) const
-{
+float Array::floatValueAtIndex(size_t index, float defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         return defaultValue;
     }
@@ -642,8 +637,7 @@ float Array::floatValueAtIndex(size_t index, float defaultValue) const
     return number.valueFloat();
 }
 
-double Array::doubleValueAtIndex(size_t index, double defaultValue) const
-{
+double Array::doubleValueAtIndex(size_t index, double defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         return defaultValue;
     }
@@ -652,8 +646,7 @@ double Array::doubleValueAtIndex(size_t index, double defaultValue) const
     return number.valueDouble();
 }
 
-Array& Array::arrayAtIndex(size_t index) const
-{
+Array& Array::arrayAtIndex(size_t index) const {
     if (index >= count()) {
         throw OutOfBounds();
     }
@@ -665,8 +658,7 @@ Array& Array::arrayAtIndex(size_t index) const
     return *static_cast<Array*>(e);
 }
 
-Object& Array::objectAtIndex(size_t index) const
-{
+Object& Array::objectAtIndex(size_t index) const {
     if (index >= count()) {
         throw OutOfBounds();
     }
@@ -678,8 +670,7 @@ Object& Array::objectAtIndex(size_t index) const
     return *static_cast<Object*>(e);
 }
 
-Boolean& Array::boolAtIndex(size_t index) const
-{
+Boolean& Array::boolAtIndex(size_t index) const {
     if (index >= count()) {
         throw OutOfBounds();
     }
@@ -692,8 +683,7 @@ Boolean& Array::boolAtIndex(size_t index) const
     return *static_cast<Boolean*>(e);
 }
 
-bool Array::boolValueAtIndex(size_t index, bool defaultValue) const
-{
+bool Array::boolValueAtIndex(size_t index, bool defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isBoolean()) {
         return defaultValue;
     }
@@ -702,8 +692,7 @@ bool Array::boolValueAtIndex(size_t index, bool defaultValue) const
     return b.value();
 }
 
-Null& Array::nullAtIndex(size_t index) const
-{
+Null& Array::nullAtIndex(size_t index) const {
     if (index >= count()) {
         throw OutOfBounds();
     }
@@ -715,18 +704,15 @@ Null& Array::nullAtIndex(size_t index) const
     return *static_cast<Null*>(e);
 }
 
-Entity& Array::entityAtIndex(size_t index)
-{
+Entity& Array::entityAtIndex(size_t index) {
     return *mValues[index];
 }
 
-const Entity& Array::entityAtIndex(size_t index) const
-{
+const Entity& Array::entityAtIndex(size_t index) const {
     return *mValues[index];
 }
 
-Entity* Array::clone() const
-{
+Entity* Array::clone() const {
     auto* clone = new Array();
     clone->mValues.resize(mValues.size());
     for (std::size_t i = 0; i < mValues.size(); i++) {
@@ -736,24 +722,20 @@ Entity* Array::clone() const
     return clone;
 }
 
-Object::Object()
-{
+Object::Object() {
 }
 
-Object::~Object()
-{
+Object::~Object() {
     for (auto& entity : mEntities) {
         delete entity.mEntity;
     }
 }
 
-bool Object::contains(const std::string& key) const
-{
+bool Object::contains(const std::string& key) const {
     return mEntityByKey.find(key) != mEntityByKey.end();
 }
 
-Array& Object::addArray(const std::string& name)
-{
+Array& Object::addArray(const std::string& name) {
     if (contains(name)) {
         throw NoSuchKey();
     }
@@ -764,8 +746,7 @@ Array& Object::addArray(const std::string& name)
     return *arr;
 }
 
-Object& Object::addObject(const std::string& name)
-{
+Object& Object::addObject(const std::string& name) {
     if (contains(name)) {
         throw NoSuchKey();
     }
@@ -787,29 +768,25 @@ Number& Object::addNumber(const std::string& name) {
     return *num;
 }
 
-Number& Object::addInt(const std::string& name, int i)
-{
+Number& Object::addInt(const std::string& name, int i) {
     auto& number = addNumber(name);
     number.setInt(i);
     return number;
 }
 
-Number& Object::addFloat(const std::string& name, float f)
-{
+Number& Object::addFloat(const std::string& name, float f) {
     auto& number = addNumber(name);
     number.setFloat(f);
     return number;
 }
 
-Number& Object::addDouble(const std::string& name, double d)
-{
+Number& Object::addDouble(const std::string& name, double d) {
     auto& number = addNumber(name);
     number.setDouble(d);
     return number;
 }
 
-String& Object::addString(const std::string& name, const char* value)
-{
+String& Object::addString(const std::string& name, const char* value) {
     if (contains(name)) {
         throw NoSuchKey();
     }
@@ -823,8 +800,7 @@ String& Object::addString(const std::string& name, const char* value)
     return *str;
 }
 
-Boolean& Object::addBoolean(const std::string& name, bool b)
-{
+Boolean& Object::addBoolean(const std::string& name, bool b) {
     if (contains(name)) {
         throw NoSuchKey();
     }
@@ -836,8 +812,7 @@ Boolean& Object::addBoolean(const std::string& name, bool b)
     return *boolean;
 }
 
-Null& Object::addNull(const std::string& name)
-{
+Null& Object::addNull(const std::string& name) {
     if (contains(name)) {
         throw NoSuchKey();
     }
@@ -848,8 +823,7 @@ Null& Object::addNull(const std::string& name)
     return *null;
 }
 
-Number& Object::setInt(const std::string& name, int i)
-{
+Number& Object::setInt(const std::string& name, int i) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addInt(name, i);
@@ -863,8 +837,7 @@ Number& Object::setInt(const std::string& name, int i)
     return ent->number();
 }
 
-Number& Object::setFloat(const std::string& name, float f)
-{
+Number& Object::setFloat(const std::string& name, float f) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addFloat(name, f);
@@ -878,8 +851,7 @@ Number& Object::setFloat(const std::string& name, float f)
     return ent->number();
 }
 
-Number& Object::setDouble(const std::string& name, double d)
-{
+Number& Object::setDouble(const std::string& name, double d) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addDouble(name, d);
@@ -893,8 +865,7 @@ Number& Object::setDouble(const std::string& name, double d)
     return ent->number();
 }
 
-String& Object::setString(const std::string& name, const char* value)
-{
+String& Object::setString(const std::string& name, const char* value) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addString(name, value);
@@ -1006,8 +977,7 @@ std::string Object::toString(bool prettyPrint, const std::string& indentation, s
     return s;
 }
 
-const std::string& Object::stringValueForKey(const std::string& name, const std::string& defaultValue) const
-{
+const std::string& Object::stringValueForKey(const std::string& name, const std::string& defaultValue) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isString()) {
         return defaultValue;
@@ -1015,8 +985,7 @@ const std::string& Object::stringValueForKey(const std::string& name, const std:
     return static_cast<String*>(it->second)->value();
 }
 
-Number* Object::numberForKey(const std::string& name) const
-{
+Number* Object::numberForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isNumber()) {
         return nullptr;
@@ -1024,8 +993,7 @@ Number* Object::numberForKey(const std::string& name) const
     return static_cast<Number*>(it->second);
 }
 
-int Object::intValueForKey(const std::string& name, int defaultValue) const
-{
+int Object::intValueForKey(const std::string& name, int defaultValue) const {
     auto* number = numberForKey(name);
     if (!number) {
         return defaultValue;
@@ -1033,8 +1001,7 @@ int Object::intValueForKey(const std::string& name, int defaultValue) const
     return number->valueInt();
 }
 
-float Object::floatValueForKey(const std::string& name, float defaultValue) const
-{
+float Object::floatValueForKey(const std::string& name, float defaultValue) const {
     auto* number = numberForKey(name);
     if (!number) {
         return defaultValue;
@@ -1042,8 +1009,7 @@ float Object::floatValueForKey(const std::string& name, float defaultValue) cons
     return number->valueFloat();
 }
 
-double Object::doubleValueForKey(const std::string& name, double defaultValue) const
-{
+double Object::doubleValueForKey(const std::string& name, double defaultValue) const {
     auto* number = numberForKey(name);
     if (!number) {
         return defaultValue;
@@ -1051,8 +1017,7 @@ double Object::doubleValueForKey(const std::string& name, double defaultValue) c
     return number->valueDouble();
 }
 
-Array* Object::arrayForKey(const std::string& name) const
-{
+Array* Object::arrayForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isArray()) {
         return NULL;
@@ -1060,8 +1025,7 @@ Array* Object::arrayForKey(const std::string& name) const
     return static_cast<Array*>(it->second);
 }
 
-Object* Object::objectForKey(const std::string& name) const
-{
+Object* Object::objectForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isObject()) {
         return nullptr;
@@ -1069,8 +1033,7 @@ Object* Object::objectForKey(const std::string& name) const
     return static_cast<Object*>(it->second);
 }
 
-Boolean* Object::boolForKey(const std::string& name) const
-{
+Boolean* Object::boolForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isBoolean()) {
         return nullptr;
@@ -1078,8 +1041,7 @@ Boolean* Object::boolForKey(const std::string& name) const
     return static_cast<Boolean*>(it->second);
 }
 
-bool Object::boolValueForKey(const std::string& name, bool defaultValue) const
-{
+bool Object::boolValueForKey(const std::string& name, bool defaultValue) const {
     auto* b = boolForKey(name);
     if (!b) {
         return defaultValue;
@@ -1087,8 +1049,7 @@ bool Object::boolValueForKey(const std::string& name, bool defaultValue) const
     return b->value();
 }
 
-Null* Object::nullForKey(const std::string& name) const
-{
+Null* Object::nullForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isNull()) {
         return nullptr;
@@ -1096,8 +1057,7 @@ Null* Object::nullForKey(const std::string& name) const
     return static_cast<Null*>(it->second);
 }
 
-Entity* Object::entityForKey(const std::string& name) const
-{
+Entity* Object::entityForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second) {
         return nullptr;
@@ -1105,8 +1065,7 @@ Entity* Object::entityForKey(const std::string& name) const
     return it->second;
 }
 
-bool Object::remove(const std::string& name)
-{
+bool Object::remove(const std::string& name) {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end()) {
         return false;
@@ -1123,8 +1082,7 @@ bool Object::remove(const std::string& name)
     return true;
 }
 
-Entity* Object::clone() const
-{
+Entity* Object::clone() const {
     auto* clone = new Object();
     clone->mEntities.resize(mEntities.size());
     for (size_t i = 0; i < mEntities.size(); i++) {
@@ -1755,8 +1713,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
 Writer::Writer(bool prettyPrint, const std::string& indentation, size_t level)
 : mPrettyPrint(prettyPrint),
   mIndentation(indentation),
-  mLevel(level)
-{
+  mLevel(level) {
 }
 
 void Writer::write(const std::string& path, const Entity& ent) {
