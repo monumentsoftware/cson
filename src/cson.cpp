@@ -465,9 +465,7 @@ std::string String::toString(bool prettyPrint, const std::string& indentation, s
 }
 
 Entity* String::clone() const {
-    auto* clone = new String();
-    clone->mValue = mValue;
-    return clone;
+    return new String(mValue);
 }
 
 Array::Array() {
@@ -522,15 +520,13 @@ Number& Array::addDouble(double value) {
 }
 
 String& Array::addString(const char* str) {
-    auto* s = new String();
-    s->setString(str);
+    auto* s = new String(str);
     mValues.push_back(s);
     return *s;
 }
 
 String& Array::addString(const std::string& str) {
-    auto* s = new String();
-    s->setString(str);
+    auto* s = new String(str);
     mValues.push_back(s);
     return *s;
 }
@@ -1437,9 +1433,7 @@ Entity* Parser::parseValue(size_t depth) {
     if (tryToConsume("\"")) {
         if (tryToConsume("\"")) {
             // special case: empty string
-            String* s = new String();
-            s->setString(std::string());
-            data = s;
+            data = new String();
         } else {
             data = parseString();
         }
@@ -1620,10 +1614,7 @@ Number* Parser::parseNumber() {
 
 // NOTE: does NOT support empty strings, caller needs to check that!
 String* Parser::parseString() {
-    std::string str = parseStringLiteral();
-    auto* s = new String();
-    s->setString(str);
-    return s;
+    return new String(parseStringLiteral());
 }
 
 JSON Parser::parse(const char* txt, size_t length) {

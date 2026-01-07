@@ -425,6 +425,7 @@ private:
 class String : public Entity {
 public:
     String();
+    explicit String(std::string s) : mValue(s) {}
     ~String() override;
 
     Type type() const override { return Type::string; }
