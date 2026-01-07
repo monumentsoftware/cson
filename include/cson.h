@@ -101,8 +101,8 @@ public:
         comment
     };
 
-    Entity();
-    virtual ~Entity();
+    Entity() = default;
+    virtual ~Entity() = default;
 
     virtual Type type() const = 0;
 
@@ -160,7 +160,7 @@ protected:
 
 class Object : public Entity {
 public:
-    Object();
+    Object() = default;
     ~Object() override;
 
     Type type() const override { return Type::object; }
@@ -312,7 +312,7 @@ private:
 
 class Array : public Entity {
 public:
-    Array();
+    Array() = default;
     ~Array() override;
 
     Type type() const override { return Type::array; }
@@ -424,9 +424,8 @@ private:
 
 class String : public Entity {
 public:
-    String();
-    explicit String(std::string s) : mValue(s) {}
-    ~String() override;
+    String() = default;
+    explicit String(const std::string& s) : mValue(s) {}
 
     Type type() const override { return Type::string; }
 
@@ -445,7 +444,6 @@ private:
 
 class Number : public Entity {
 public:
-
     Type type() const override { return Type::number; }
 
     void setInt(int i);
@@ -468,9 +466,6 @@ private:
 
 class Boolean : public Entity {
 public:
-    Boolean();
-    ~Boolean() override;
-
     Type type() const override { return Type::boolean; }
 
     void setBool(bool b);
@@ -488,7 +483,6 @@ private:
 
 class Null : public Entity {
 public:
-
     Type type() const override { return Type::null; }
 
     std::string toString(bool prettyPrint = true, const std::string& indentation = std::string("  "), size_t level = 0) const override;
@@ -507,7 +501,6 @@ public:
 
     Entity* clone() const override;
 private:
-
     std::string mText;
 
     friend class Parser;

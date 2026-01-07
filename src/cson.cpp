@@ -176,12 +176,6 @@ static std::string EscapeString(const std::string& str) {
     return out;
 }
 
-Entity::Entity() {
-}
-
-Entity::~Entity() {
-}
-
 bool Entity::isObject() const {
     return dynamic_cast<const Object*>(this) != NULL;
 }
@@ -438,12 +432,6 @@ Entity* Number::clone() const {
     return clone;
 }
 
-String::String() {
-}
-
-String::~String() {
-}
-
 void String::setString(const char* str) {
     mValue = std::string(str);
 }
@@ -466,9 +454,6 @@ std::string String::toString(bool prettyPrint, const std::string& indentation, s
 
 Entity* String::clone() const {
     return new String(mValue);
-}
-
-Array::Array() {
 }
 
 Array::~Array() {
@@ -716,9 +701,6 @@ Entity* Array::clone() const {
         clone->mValues[i] = e;
     }
     return clone;
-}
-
-Object::Object() {
 }
 
 Object::~Object() {
@@ -1087,12 +1069,6 @@ Entity* Object::clone() const {
         clone->mEntityByKey[mEntities[i].mKey] = childClone;
     }
     return clone;
-}
-
-Boolean::Boolean() {
-}
-
-Boolean::~Boolean() {
 }
 
 void Boolean::setBool(bool b) {
