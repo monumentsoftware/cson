@@ -18,16 +18,28 @@ namespace cson {
 std::string Entity::s_EmptyString;
 
 Exception::Exception(const char* txt, ...) {
-    char buf[16384];
+    constexpr size_t bufSize = 16384;
+    char buf[bufSize];
     va_list list;
     va_start(list, txt);
-    MJSONvsprintf(buf, 16384, txt, list);
+    MJSONvsprintf(buf, bufSize, txt, list);
     va_end(list);
 
     mMessage = std::string(buf);
 }
 
 Exception::Exception() {
+}
+
+InvalidType::InvalidType(const char* txt, ...) : Exception(std::string()) {
+    constexpr size_t bufSize = 4096;
+    char buf[bufSize];
+    va_list list;
+    va_start(list, txt);
+    MJSONvsprintf(buf, bufSize, txt, list);
+    va_end(list);
+
+    mMessage = std::string(buf);
 }
 
 
@@ -203,7 +215,7 @@ bool Entity::isNull() const {
 const Object& Entity::object() const {
     const auto* obj = dynamic_cast<const Object*>(this);
     if (!obj) {
-        throw Exception("Entity is not an object");
+        throw InvalidType("object() called on entity that is not of type Object");
     }
     return *obj;
 }
@@ -211,7 +223,7 @@ const Object& Entity::object() const {
 Object& Entity::object() {
     auto* obj = dynamic_cast<Object*>(this);
     if (!obj) {
-        throw Exception("Entity is not an object");
+        throw InvalidType("object() called on entity that is not of type Object");
     }
     return *obj;
 }
@@ -219,7 +231,7 @@ Object& Entity::object() {
 const Array& Entity::array() const {
     const auto* arr = dynamic_cast<const Array*>(this);
     if (!arr) {
-        throw Exception("Array() failed for non CArray entity");
+        throw InvalidType("array() called on entity that is not of type Array");
     }
     return *arr;
 }
@@ -227,7 +239,7 @@ const Array& Entity::array() const {
 Array& Entity::array() {
     auto* arr = dynamic_cast<Array*>(this);
     if (!arr) {
-        throw Exception("Array() failed for non CArray entity");
+        throw InvalidType("array() called on entity that is not of type Array");
     }
     return *arr;
 }
@@ -235,7 +247,7 @@ Array& Entity::array() {
 const String& Entity::string() const {
     const auto* str = dynamic_cast<const String*>(this);
     if (!str) {
-        throw Exception("String() failed for non CString entity");
+        throw InvalidType("string() called on entity that is not of type String");
     }
     return *str;
 }
@@ -243,7 +255,7 @@ const String& Entity::string() const {
 String& Entity::string() {
     auto* str = dynamic_cast<String*>(this);
     if (!str) {
-        throw Exception("String() failed for non CString entity");
+        throw InvalidType("string() called on entity that is not of type String");
     }
     return *str;
 }
@@ -251,7 +263,7 @@ String& Entity::string() {
 const Number& Entity::number() const {
     const auto* number = dynamic_cast<const Number*>(this);
     if (!number) {
-        throw Exception("Number() failed for non CNumber entity");
+        throw InvalidType("number() called on entity that is not of type Number");
     }
     return *number;
 }
@@ -259,7 +271,7 @@ const Number& Entity::number() const {
 Number& Entity::number() {
     auto* number = dynamic_cast<Number*>(this);
     if (!number) {
-        throw Exception("Number() failed for non CNumber entity");
+        throw InvalidType("number() called on entity that is not of type Number");
     }
     return *number;
 }
@@ -267,7 +279,7 @@ Number& Entity::number() {
 const Boolean& Entity::boolean() const {
     const auto* boolean = dynamic_cast<const Boolean*>(this);
     if (!boolean) {
-        throw Exception("Boolean() failed for non CBoolean entity");
+        throw InvalidType("boolean() called on entity that is not of type Boolean");
     }
     return *boolean;
 }
@@ -275,7 +287,7 @@ const Boolean& Entity::boolean() const {
 Boolean& Entity::boolean() {
     auto* boolean = dynamic_cast<Boolean*>(this);
     if (!boolean) {
-        throw Exception("Boolean() failed for non CBoolean entity");
+        throw InvalidType("boolean() called on entity that is not of type Boolean");
     }
     return *boolean;
 }
@@ -283,7 +295,7 @@ Boolean& Entity::boolean() {
 const Null& Entity::null() const {
     const auto* n = dynamic_cast<const Null*>(this);
     if (!n) {
-        throw Exception("Null() failed for non CNull entity");
+        throw InvalidType("null() called on entity that is not of type Null");
     }
     return *n;
 }
@@ -291,25 +303,25 @@ const Null& Entity::null() const {
 Null& Entity::null() {
     auto* n = dynamic_cast<Null*>(this);
     if (!n) {
-        throw Exception("Null() failed for non CNull entity");
+        throw InvalidType("null() called on entity that is not of type Null");
     }
     return *n;
 }
 
 const std::string& Entity::keyByIndex(size_t index) const {
     if (!isObject()) {
-        throw Exception("keyByIndex() is only allowed for objects");
+        throw InvalidType("keyByIndex() is only allowed for entities of type Object");
     }
     return Object().keyByIndex(index);
 }
 
 size_t Entity::count() const {
-    throw Exception("Count is not applicable for this type");
+    throw InvalidType("count() is only allowed for entities of type Object or Array");
 }
 
 const std::string& Entity::stringValue() const {
     if (!isString()) {
-        throw Exception("Called StringValue for non string entity");
+        throw InvalidType("stringValue() is only allowed for entities of type String");
     }
     return string().value();
 }
@@ -337,13 +349,13 @@ const Entity& Entity::operator[] (size_t idx) const {
     else if (isObject()) {
         return object().entityAtIndex(idx);
     } else {
-        throw Exception("operator[](int) is only allowed for arrays and objects");
+        throw InvalidType("operator[](int) is only allowed for entities of type Object or Array");
     }
 }
 
 const Entity& Entity::operator[] (const std::string& key) const {
     if (!isObject()) {
-        throw Exception("operator[](key) is only allowed for objects");
+        throw InvalidType("operator[](key) is only allowed for entities of type Object");
     }
     return *object().entityForKey(key);
 }
@@ -355,13 +367,13 @@ Entity& Entity::operator[] (size_t idx) {
     else if (isObject()) {
         return object().entityAtIndex(idx);
     } else {
-        throw Exception("operator[](int) is only allowed for arrays and objects");
+        throw InvalidType("operator[](int) is only allowed for entities of type Object or Array");
     }
 }
 
 Entity& Entity::operator[] (const std::string& key) {
     if (!isObject()) {
-        throw Exception("operator[](key) is only allowed for objects");
+        throw InvalidType("operator[](key) is only allowed for entities of type Object");
     }
     return *object().entityForKey(key);
 }
@@ -595,7 +607,7 @@ Number& Array::numberAtIndex(size_t index) const {
         throw OutOfBounds();
     }
     if (!mValues[index] || !mValues[index]->isNumber()) {
-        throw Exception("Entity is not a number");
+        throw InvalidType("numberAtIndex() failed - type of entity at index %zu is not Number", index);
     }
     return *static_cast<Number*>(mValues[index]);
 }
@@ -1366,7 +1378,7 @@ std::string Parser::parseStringLiteral() {
                 } else {
                     throw ParseError(mText, mLength, origPos, "Invalid utf8 code point");
                 }
-                }
+            }
         } else if (utf8ByteCount > 0) {
             if ((c & 0b10000000) != 0b10000000) {
                 throw ParseError(mText, mLength, origPos, "Invalid UTF8 code point");

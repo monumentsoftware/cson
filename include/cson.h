@@ -22,6 +22,7 @@ public:
     __attribute__((format(printf, 2, 3)))
 #endif
     ;
+    Exception(const std::string& s) : mMessage(s) {}
     virtual ~Exception() = default;
 
     const std::string& message() const { return mMessage; }
@@ -42,6 +43,12 @@ class InvalidType : public Exception {
 public:
     InvalidType() : Exception("Invalid type") {
     }
+    // TODO: std::format() would make things easier, but requires C++20
+    InvalidType(const char* txt, ...)
+#ifndef _MSC_VER
+    __attribute__((format(printf, 2, 3)))
+#endif
+    ;
 };
 
 class NoSuchKey : public Exception {
