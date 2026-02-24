@@ -523,6 +523,8 @@ public:
         indentTab,
     };
 
+    JSON();
+
     JSON(JSON&& ctx) = default;
 
     ~JSON();
@@ -548,8 +550,6 @@ public:
     std::string toString(const Entity& entity, const std::set<Option>& options = {}) const;
 
 private:
-    JSON() = default;
-
     JSON(std::unique_ptr<Entity> root);
 
     JSON(const JSON&) = delete;

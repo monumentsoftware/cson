@@ -1127,6 +1127,10 @@ Entity* Comment::clone() const {
     return clone;
 }
 
+JSON::JSON() : mRoot(std::make_unique<cson::Null>())
+{
+}
+
 JSON::JSON(std::unique_ptr<Entity> root) : mRoot(std::move(root)) {
 }
 

@@ -101,6 +101,15 @@ TEST(CsonTests, testTypes) {
     EXPECT_EQ(obj["array"].array()[2].stringValue(), "c");
 }
 
+TEST(CsonTests, testEmpty) {
+    const JSON json;
+    EXPECT_FALSE(json.root().isObject());
+    EXPECT_FALSE(json.root().isArray());
+    EXPECT_FALSE(json.root().isNumber());
+    EXPECT_FALSE(json.root().isString());
+    EXPECT_FALSE(json.root().isBoolean());
+    EXPECT_TRUE(json.root().isNull());
+}
 
 TEST(CsonTests, testIterators) {
     const auto json = JSON::fromString(JSON_TYPES);
