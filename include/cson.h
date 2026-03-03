@@ -529,6 +529,8 @@ public:
 
     ~JSON();
 
+    void operator=(JSON&&);
+
     Entity& root();
 
     const Entity& root() const;
@@ -551,10 +553,6 @@ public:
 
 private:
     JSON(std::unique_ptr<Entity> root);
-
-    JSON(const JSON&) = delete;
-
-    void operator=(const JSON&) = delete;
 
     std::unique_ptr<Entity> mRoot;
 
