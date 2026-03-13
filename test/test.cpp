@@ -131,8 +131,8 @@ TEST(CsonTests, testIterators) {
 
     testString.clear();
     const auto& arr = json.object()["array"].array();
-    for (const auto entity : arr) {
-        testString += entity->stringValue();
+    for (const auto& entity : arr) {
+        testString += entity.stringValue();
     }
 
     EXPECT_EQ(testString, "abc");
