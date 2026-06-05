@@ -26,8 +26,8 @@ void parseFile() {
             break;
         case Entity::Type::array:
             printf("[arr]");
-            for (auto a : t->array()) {
-                printf(" %s;", a->stringValue().c_str());
+            for (const auto& a : t->array()) {
+                printf(" %s;", a.stringValue().c_str());
             }
             printf("\n");
             break;

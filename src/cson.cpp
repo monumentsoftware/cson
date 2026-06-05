@@ -1137,6 +1137,10 @@ JSON::JSON(std::unique_ptr<Entity> root) : mRoot(std::move(root)) {
 JSON::~JSON() {
 }
 
+void JSON::operator= (JSON&& json) {
+    mRoot = std::move(json.mRoot);
+}
+
 Entity& JSON::root() {
     return *mRoot;
 }

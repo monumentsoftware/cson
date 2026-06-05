@@ -394,12 +394,12 @@ public:
 
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
-        using value_type        = Entity*;
+        using value_type        = Entity;
         using pointer           = const value_type*;  // or also value_type*
         using reference         = const value_type&;  // or also value_type&
 
-        reference operator*() const { return *mIterator; }
-        pointer operator->() const { return mIterator.operator->(); }
+        reference operator*() const { return **mIterator; }
+        pointer operator->() const { return *mIterator.operator->(); }
 
         // Prefix increment
         ConstIterator& operator++() {
@@ -530,6 +530,8 @@ public:
 
     ~JSON();
 
+    void operator=(JSON&&);
+
     Entity& root();
 
     const Entity& root() const;
@@ -552,10 +554,6 @@ public:
 
 private:
     JSON(std::unique_ptr<Entity> root);
-
-    JSON(const JSON&) = delete;
-
-    void operator=(const JSON&) = delete;
 
     std::unique_ptr<Entity> mRoot;
 
