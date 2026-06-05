@@ -401,7 +401,7 @@ void Number::setString(const std::string& num) {
 }
 
 int Number::valueInt() const {
-    std::stringstream stream(mNumber);
+    std::istringstream stream(mNumber);
     int v;
     stream >> v;
     if (stream.fail()) {
@@ -411,7 +411,7 @@ int Number::valueInt() const {
 }
 
 float Number::valueFloat() const {
-    std::stringstream stream(mNumber);
+    std::istringstream stream(mNumber);
     float v;
     stream >> v;
     if (stream.fail()) {
@@ -421,7 +421,7 @@ float Number::valueFloat() const {
 }
 
 double Number::valueDouble() const {
-    std::stringstream stream(mNumber);
+    std::istringstream stream(mNumber);
     double v;
     stream >> v;
     if (stream.fail()) {
