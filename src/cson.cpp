@@ -1690,7 +1690,7 @@ JSON Parser::parseFile(const std::string& path, bool allowComments) {
 
     if (rd != (size_t)size) {
         delete[] buf;
-        throw IOError("Failed to read %zu bytes from file (read=%zu)", size, (size_t)rd);
+        throw IOError("Failed to read %zu bytes from file (read=%zu)", static_cast<size_t>(size), rd);
     }
     try {
         auto context = parseString(buf, static_cast<size_t>(size), allowComments);
