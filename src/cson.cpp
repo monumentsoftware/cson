@@ -312,7 +312,7 @@ const std::string& Entity::keyByIndex(size_t index) const {
     if (!isObject()) {
         throw InvalidType("keyByIndex() is only allowed for entities of type Object");
     }
-    return Object().keyByIndex(index);
+    return object().keyByIndex(index);
 }
 
 size_t Entity::count() const {
