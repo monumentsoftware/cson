@@ -603,7 +603,7 @@ const std::string& Array::stringValueAtIndex(size_t index, const std::string& de
 }
 
 Number& Array::numberAtIndex(size_t index) const {
-    if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
+    if (index >= count()) {
         throw OutOfBounds();
     }
     if (!mValues[index] || !mValues[index]->isNumber()) {
