@@ -19,7 +19,7 @@ endif()
 add_library(cson)
 
 target_sources(cson
-    PUBLIC
+    PRIVATE
         src/cson.cpp
     PUBLIC FILE_SET HEADERS
     BASE_DIRS include
@@ -31,8 +31,6 @@ set_property(TARGET cson PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 # enable c++ 11
 target_compile_features(cson PRIVATE cxx_std_11)
-
-target_include_directories(cson PUBLIC include)
 
 if(WITH_EXAMPLES)
     add_subdirectory(examples)
