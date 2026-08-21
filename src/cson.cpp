@@ -366,7 +366,11 @@ const Entity& Entity::operator[] (const std::string& key) const {
     if (!isObject()) {
         throw InvalidType("operator[](key) is only allowed for entities of type Object");
     }
-    return *object().entityForKey(key);
+    const auto* entity = object().entityForKey(key);
+    if (!entity) {
+        throw NoSuchKey(key);
+    }
+    return *entity;
 }
 
 Entity& Entity::operator[] (size_t idx) {
@@ -384,7 +388,11 @@ Entity& Entity::operator[] (const std::string& key) {
     if (!isObject()) {
         throw InvalidType("operator[](key) is only allowed for entities of type Object");
     }
-    return *object().entityForKey(key);
+    auto* entity = object().entityForKey(key);
+    if (!entity) {
+        throw NoSuchKey(key);
+    }
+    return *entity;
 }
 
 void Number::setInt(int i) {
@@ -707,10 +715,16 @@ Null& Array::nullAtIndex(size_t index) const {
 }
 
 Entity& Array::entityAtIndex(size_t index) {
+    if (index >= count()) {
+        throw OutOfBounds();
+    }
     return *mValues[index];
 }
 
 const Entity& Array::entityAtIndex(size_t index) const {
+    if (index >= count()) {
+        throw OutOfBounds();
+    }
     return *mValues[index];
 }
 
@@ -893,14 +907,23 @@ Boolean& Object::setBoolean(const std::string& name, bool b) {
 }
 
 Entity& Object::entityAtIndex(size_t idx) {
+    if (idx >= count()) {
+        throw OutOfBounds();
+    }
     return *mEntities[idx].mEntity;
 }
 
 const Entity& Object::entityAtIndex(size_t idx) const {
+    if (idx >= count()) {
+        throw OutOfBounds();
+    }
     return *mEntities[idx].mEntity;
 }
 
 const std::string& Object::keyByIndex(size_t idx) const {
+    if (idx >= count()) {
+        throw OutOfBounds();
+    }
     return mEntities[idx].mKey;
 }
 

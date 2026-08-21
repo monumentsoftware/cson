@@ -56,6 +56,8 @@ class NoSuchKey : public Exception {
 public:
     NoSuchKey() : Exception("No such key") {
     }
+    explicit NoSuchKey(const std::string& key) : Exception("No such key: " + key) {
+    }
 };
 
 class ParseError : public Exception {

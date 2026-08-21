@@ -175,6 +175,109 @@ TEST(CsonTests, testRawControlCharacterInStringIsRejected) {
     EXPECT_THROW(Parser::parseString(json), ParseError);
 }
 
+// Looking up a key that does not exist used to dereference a null pointer.
+TEST(CsonTests, testMissingKeyThrows) {
+    auto json = JSON::fromString(JSON_TYPES);
+
+    const auto& constObj = json.object();
+    EXPECT_THROW(constObj["notthere"], NoSuchKey);
+    EXPECT_EQ(constObj.entityForKey("notthere"), nullptr);
+
+    auto& obj = json.object();
+    EXPECT_THROW(obj["notthere"], NoSuchKey);
+
+    // The key that was missing is part of the message.
+    try {
+        constObj["notthere"];
+        FAIL() << "no exception thrown";
+    } catch (const NoSuchKey& e) {
+        EXPECT_NE(e.message().find("notthere"), std::string::npos) << e.message();
+    }
+
+    // Existing keys are unaffected, including ones holding null.
+    EXPECT_EQ(constObj["string1"].stringValue(), "Hello");
+    EXPECT_EQ(obj["string1"].stringValue(), "Hello");
+    EXPECT_TRUE(constObj["null"].isNull());
+    EXPECT_TRUE(obj["null"].isNull());
+
+    // An empty object has no keys at all.
+    Object empty;
+    EXPECT_THROW(empty["anything"], NoSuchKey);
+    const Object& constEmpty = empty;
+    EXPECT_THROW(constEmpty["anything"], NoSuchKey);
+
+    // Key lookup on a non-object is a type error, not a missing key.
+    EXPECT_THROW(constObj["array"]["notthere"], InvalidType);
+    EXPECT_THROW(obj["array"]["notthere"], InvalidType);
+    EXPECT_THROW(constObj["string1"]["notthere"], InvalidType);
+}
+
+// Index based access used to read past the end of the underlying vector.
+TEST(CsonTests, testArrayIndexOutOfBoundsThrows) {
+    Array arr;
+    arr.addString("a");
+    arr.addString("b");
+
+    const Array& constArr = arr;
+
+    EXPECT_EQ(arr.entityAtIndex(1).stringValue(), "b");
+    EXPECT_EQ(constArr.entityAtIndex(1).stringValue(), "b");
+
+    EXPECT_THROW(arr.entityAtIndex(2), OutOfBounds);
+    EXPECT_THROW(constArr.entityAtIndex(2), OutOfBounds);
+    EXPECT_THROW(arr.entityAtIndex(static_cast<size_t>(-1)), OutOfBounds);
+    EXPECT_THROW(constArr.entityAtIndex(static_cast<size_t>(-1)), OutOfBounds);
+
+    // ... including through operator[].
+    EXPECT_THROW(arr[2], OutOfBounds);
+    EXPECT_THROW(constArr[2], OutOfBounds);
+
+    Array empty;
+    const Array& constEmpty = empty;
+    EXPECT_THROW(empty.entityAtIndex(0), OutOfBounds);
+    EXPECT_THROW(constEmpty.entityAtIndex(0), OutOfBounds);
+    EXPECT_THROW(empty[0], OutOfBounds);
+    EXPECT_THROW(constEmpty[0], OutOfBounds);
+}
+
+TEST(CsonTests, testObjectIndexOutOfBoundsThrows) {
+    Object obj;
+    obj.addString("first", "a");
+    obj.addString("second", "b");
+
+    const Object& constObj = obj;
+
+    EXPECT_EQ(obj.entityAtIndex(1).stringValue(), "b");
+    EXPECT_EQ(constObj.entityAtIndex(1).stringValue(), "b");
+    EXPECT_EQ(constObj.keyByIndex(1), "second");
+
+    EXPECT_THROW(obj.entityAtIndex(2), OutOfBounds);
+    EXPECT_THROW(constObj.entityAtIndex(2), OutOfBounds);
+    EXPECT_THROW(obj.entityAtIndex(static_cast<size_t>(-1)), OutOfBounds);
+    EXPECT_THROW(constObj.keyByIndex(2), OutOfBounds);
+    EXPECT_THROW(constObj.keyByIndex(static_cast<size_t>(-1)), OutOfBounds);
+
+    // ... including through operator[] and the Entity level accessors.
+    EXPECT_THROW(obj[2], OutOfBounds);
+    EXPECT_THROW(constObj[2], OutOfBounds);
+    const Entity& entity = constObj;
+    EXPECT_THROW(entity.keyByIndex(2), OutOfBounds);
+
+    // remove() shrinks the object, so what was a valid index before is not anymore.
+    ASSERT_TRUE(obj.remove("second"));
+    ASSERT_EQ(obj.count(), static_cast<size_t>(1));
+    EXPECT_THROW(obj.entityAtIndex(1), OutOfBounds);
+    EXPECT_THROW(constObj.keyByIndex(1), OutOfBounds);
+
+    Object empty;
+    const Object& constEmpty = empty;
+    EXPECT_THROW(empty.entityAtIndex(0), OutOfBounds);
+    EXPECT_THROW(constEmpty.entityAtIndex(0), OutOfBounds);
+    EXPECT_THROW(constEmpty.keyByIndex(0), OutOfBounds);
+    EXPECT_THROW(empty[0], OutOfBounds);
+    EXPECT_THROW(constEmpty[0], OutOfBounds);
+}
+
 TEST(CsonTests, testEmpty) {
     const JSON json;
     EXPECT_FALSE(json.root().isObject());
