@@ -149,6 +149,8 @@ static std::string EscapeString(const std::string& str) {
             c == '/' ||
             c == '\"') {
             escapeCount++;
+        } else if (static_cast<unsigned char>(c) < 0x20) {
+            escapeCount += 5;
         }
     }
     std::string out;
@@ -181,7 +183,14 @@ static std::string EscapeString(const std::string& str) {
             out += "\\\"";
             break;
         default:
-            out += c;
+            // Control characters are not allowed in json strings, they have to be escaped.
+            if (static_cast<unsigned char>(c) < 0x20) {
+                char buf[7];
+                snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned int>(static_cast<unsigned char>(c)));
+                out += buf;
+            } else {
+                out += c;
+            }
             break;
         }
     }
