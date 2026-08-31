@@ -1,6 +1,8 @@
 #include <cson.h>
 #include <stdio.h>
 #include <gtest/gtest.h>
+#include <limits>
+#include <string>
 
 class DepthTests : public testing::TestWithParam<std::tuple<std::string, size_t>>
 {
@@ -313,6 +315,167 @@ TEST(CsonTests, testIterators) {
     }
 
     EXPECT_EQ(testString, "abc");
+}
+
+namespace {
+
+struct IntRangeCase {
+    const char* name;
+    int64_t value;
+};
+
+// The boundaries of one integer type, plus the values right next to them.
+#define CSON_INT_RANGE_CASES(type)                                                    \
+    { #type " min",     static_cast<int64_t>(std::numeric_limits<type>::min()) },     \
+    { #type " min + 1", static_cast<int64_t>(std::numeric_limits<type>::min()) + 1 }, \
+    { #type " max - 1", static_cast<int64_t>(std::numeric_limits<type>::max()) - 1 }, \
+    { #type " max",     static_cast<int64_t>(std::numeric_limits<type>::max()) }
+
+// Every integer type that fits into the int64_t based setInt()/addInt() api. uint64_t is
+// not among them, its upper half does not fit into an int64_t.
+const IntRangeCase INT_RANGE_CASES[] = {
+    { "zero", 0 },
+    { "one", 1 },
+    { "minus one", -1 },
+    CSON_INT_RANGE_CASES(uint8_t),
+    CSON_INT_RANGE_CASES(int8_t),
+    CSON_INT_RANGE_CASES(uint16_t),
+    CSON_INT_RANGE_CASES(int16_t),
+    CSON_INT_RANGE_CASES(uint32_t),
+    CSON_INT_RANGE_CASES(int32_t),
+    CSON_INT_RANGE_CASES(int64_t),
+};
+
+#undef CSON_INT_RANGE_CASES
+
+// Serializing and re-parsing makes both the writer and the parser see every value.
+JSON roundTrip(const Entity& entity, bool prettyPrint) {
+    return Parser::parseString(entity.toString(prettyPrint));
+}
+
+} // namespace
+
+// Number::setInt() is what Object::addInt(), Object::setInt() and Array::addInt() all
+// write through.
+TEST(CsonTests, testNumberSetIntRanges) {
+    for (const auto& testCase : INT_RANGE_CASES) {
+        const std::string expected = std::to_string(testCase.value);
+
+        Number number;
+        number.setInt(testCase.value);
+        EXPECT_EQ(number.value(), expected) << testCase.name;
+        EXPECT_EQ(number.valueInt(), testCase.value) << testCase.name;
+        EXPECT_EQ(number.toString(false), expected) << testCase.name;
+        EXPECT_EQ(number.toString(true), expected) << testCase.name;
+
+        // A bare number is a valid json document on its own.
+        JSON json;
+        ASSERT_NO_THROW({ json = roundTrip(number, false); }) << testCase.name;
+        EXPECT_TRUE(json.root().isNumber()) << testCase.name;
+        EXPECT_EQ(json.root().number().value(), expected) << testCase.name;
+        EXPECT_EQ(json.root().number().valueInt(), testCase.value) << testCase.name;
+        EXPECT_EQ(json.root().intValue(), testCase.value) << testCase.name;
+
+        // Overwriting a number keeps no trace of the previous value.
+        Number overwritten;
+        overwritten.setInt(std::numeric_limits<int64_t>::min());
+        overwritten.setInt(testCase.value);
+        EXPECT_EQ(overwritten.value(), expected) << testCase.name;
+        EXPECT_EQ(overwritten.valueInt(), testCase.value) << testCase.name;
+    }
+}
+
+TEST(CsonTests, testObjectAddIntRanges) {
+    Object obj;
+    for (const auto& testCase : INT_RANGE_CASES) {
+        Number& number = obj.addInt(testCase.name, testCase.value);
+        EXPECT_EQ(number.value(), std::to_string(testCase.value)) << testCase.name;
+        EXPECT_EQ(number.valueInt(), testCase.value) << testCase.name;
+
+        EXPECT_EQ(obj.intValueForKey(testCase.name), testCase.value) << testCase.name;
+        EXPECT_EQ(obj[testCase.name].intValue(), testCase.value) << testCase.name;
+    }
+
+    for (const bool prettyPrint : { false, true }) {
+        JSON json;
+        ASSERT_NO_THROW({ json = roundTrip(obj, prettyPrint); }) << "prettyPrint: " << prettyPrint;
+
+        const auto& parsed = json.object();
+        ASSERT_EQ(parsed.count(), sizeof(INT_RANGE_CASES) / sizeof(INT_RANGE_CASES[0]));
+        for (const auto& testCase : INT_RANGE_CASES) {
+            ASSERT_TRUE(parsed.contains(testCase.name)) << testCase.name;
+            EXPECT_EQ(parsed.intValueForKey(testCase.name), testCase.value) << testCase.name;
+            EXPECT_EQ(parsed[testCase.name].number().value(), std::to_string(testCase.value)) << testCase.name;
+        }
+    }
+}
+
+TEST(CsonTests, testObjectSetIntRanges) {
+    // setInt() has three paths: adding a new key, overwriting an existing number and
+    // replacing an entity of a different type. All of them have to cover the full range.
+    Object added;
+    Object overwritten;
+    Object replaced;
+
+    for (const auto& testCase : INT_RANGE_CASES) {
+        overwritten.addInt(testCase.name, 0);
+        replaced.addString(testCase.name, "not a number");
+
+        Number& addedNumber = added.setInt(testCase.name, testCase.value);
+        Number& overwrittenNumber = overwritten.setInt(testCase.name, testCase.value);
+        Number& replacedNumber = replaced.setInt(testCase.name, testCase.value);
+
+        const std::string expected = std::to_string(testCase.value);
+        EXPECT_EQ(addedNumber.value(), expected) << testCase.name;
+        EXPECT_EQ(overwrittenNumber.value(), expected) << testCase.name;
+        EXPECT_EQ(replacedNumber.value(), expected) << testCase.name;
+
+        EXPECT_EQ(added.intValueForKey(testCase.name), testCase.value) << testCase.name;
+        EXPECT_EQ(overwritten.intValueForKey(testCase.name), testCase.value) << testCase.name;
+        EXPECT_EQ(replaced.intValueForKey(testCase.name), testCase.value) << testCase.name;
+        EXPECT_TRUE(replaced[testCase.name].isNumber()) << testCase.name;
+    }
+
+    const Object* objects[] = { &added, &overwritten, &replaced };
+    for (const auto* obj : objects) {
+        JSON json;
+        ASSERT_NO_THROW({ json = roundTrip(*obj, false); });
+
+        const auto& parsed = json.object();
+        ASSERT_EQ(parsed.count(), sizeof(INT_RANGE_CASES) / sizeof(INT_RANGE_CASES[0]));
+        for (const auto& testCase : INT_RANGE_CASES) {
+            EXPECT_EQ(parsed.intValueForKey(testCase.name), testCase.value) << testCase.name;
+        }
+    }
+}
+
+TEST(CsonTests, testArrayAddIntRanges) {
+    Array arr;
+    size_t index = 0;
+    for (const auto& testCase : INT_RANGE_CASES) {
+        Number& number = arr.addInt(testCase.value);
+        EXPECT_EQ(number.value(), std::to_string(testCase.value)) << testCase.name;
+        EXPECT_EQ(number.valueInt(), testCase.value) << testCase.name;
+
+        EXPECT_EQ(arr.intValueAtIndex(index), testCase.value) << testCase.name;
+        EXPECT_EQ(arr.numberAtIndex(index).valueInt(), testCase.value) << testCase.name;
+        EXPECT_EQ(arr[index].intValue(), testCase.value) << testCase.name;
+        index++;
+    }
+
+    for (const bool prettyPrint : { false, true }) {
+        JSON json;
+        ASSERT_NO_THROW({ json = roundTrip(arr, prettyPrint); }) << "prettyPrint: " << prettyPrint;
+
+        const auto& parsed = json.array();
+        ASSERT_EQ(parsed.count(), sizeof(INT_RANGE_CASES) / sizeof(INT_RANGE_CASES[0]));
+        index = 0;
+        for (const auto& testCase : INT_RANGE_CASES) {
+            EXPECT_EQ(parsed.intValueAtIndex(index), testCase.value) << testCase.name;
+            EXPECT_EQ(parsed.numberAtIndex(index).value(), std::to_string(testCase.value)) << testCase.name;
+            index++;
+        }
+    }
 }
 
 TEST_P(DepthTests, testDepth) {
