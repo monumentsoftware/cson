@@ -975,18 +975,13 @@ static void writeCommaIfNeeded(std::string& str, const std::vector<Object::KeyAn
 }
 
 std::string Object::toString(bool prettyPrint, const std::string& indentation, size_t level) const {
-    std::string s;
+    std::string s = "{";
     if (prettyPrint) {
         std::string prefix;
         for (size_t i = 0; i < level; i++) {
             prefix += indentation;
         }
 
-        if (level > 0) {
-            s += "\n";
-        }
-
-        s += prefix + "{";
         s += "\n";
 
         for (size_t i = 0; i < mEntities.size(); i++) {
@@ -1005,11 +1000,8 @@ std::string Object::toString(bool prettyPrint, const std::string& indentation, s
             s += "\n";
 
         }
-        s += "\n";
         s += prefix;
     } else {
-        s += "{";
-
         for (size_t i = 0; i < mEntities.size(); i++) {
             const auto& entityAndKey = mEntities.at(i);
             if (entityAndKey.mEntity->type() == Type::comment) {

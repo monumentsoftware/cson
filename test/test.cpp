@@ -1,8 +1,10 @@
 #include <cson.h>
 #include <stdio.h>
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <limits>
 #include <string>
+#include <vector>
 
 class DepthTests : public testing::TestWithParam<std::tuple<std::string, size_t>>
 {
@@ -476,6 +478,262 @@ TEST(CsonTests, testArrayAddIntRanges) {
             index++;
         }
     }
+}
+
+namespace {
+
+// A document using every container nesting that the pretty printer has to indent:
+// objects and arrays at the top level, inside an array and inside an object.
+void buildPrettyPrintDocument(Object& root) {
+    root.addString("name", "cson");
+    root.addInt("version", 1);
+
+    Array& items = root.addArray("items");
+    Object& first = items.addObject();
+    first.addInt("id", 1);
+    Array& tags = first.addArray("tags");
+    tags.addString("a");
+    tags.addString("b");
+    items.addInt(2);
+    Array& innerArray = items.addArray();
+    innerArray.addObject().addBoolean("nested", true);
+
+    Object& nested = root.addObject("nested");
+    nested.addBoolean("flag", false);
+    nested.addNull("nothing");
+}
+
+// Every line of the expected output, so a failure points at the line that differs.
+void expectLines(const std::string& actual, const std::vector<std::string>& expectedLines) {
+    std::vector<std::string> actualLines;
+    std::string line;
+    for (const char c : actual) {
+        if (c == '\n') {
+            actualLines.push_back(line);
+            line.clear();
+        } else {
+            line += c;
+        }
+    }
+    actualLines.push_back(line);
+
+    EXPECT_EQ(actualLines.size(), expectedLines.size()) << "full output:\n" << actual;
+    for (size_t i = 0; i < std::min(actualLines.size(), expectedLines.size()); i++) {
+        EXPECT_EQ(actualLines[i], expectedLines[i]) << "line " << i << "\nfull output:\n" << actual;
+    }
+}
+
+} // namespace
+
+// Both containers open on the line they start on. An object used to emit a newline and its
+// own indentation before the opening brace, which left an empty line behind whenever the
+// caller had already written indentation for it - an object inside an array for example.
+TEST(CsonTests, testPrettyPrintNestedContainers) {
+    Object root;
+    buildPrettyPrintDocument(root);
+
+    expectLines(root.toString(true), {
+        "{",
+        "  \"name\":\"cson\",",
+        "  \"version\":1,",
+        "  \"items\":[",
+        "    {",
+        "      \"id\":1,",
+        "      \"tags\":[",
+        "        \"a\",",
+        "        \"b\"",
+        "      ]",
+        "    },",
+        "    2,",
+        "    [",
+        "      {",
+        "        \"nested\":true",
+        "      }",
+        "    ]",
+        "  ],",
+        "  \"nested\":{",
+        "    \"flag\":false,",
+        "    \"nothing\":null",
+        "  }",
+        "}",
+    });
+}
+
+// The empty lines the old object output produced are gone, and no line is whitespace only.
+TEST(CsonTests, testPrettyPrintHasNoEmptyLines) {
+    Object root;
+    buildPrettyPrintDocument(root);
+
+    const std::string pretty = root.toString(true);
+    EXPECT_EQ(pretty.find("\n\n"), std::string::npos) << pretty;
+
+    size_t lineStart = 0;
+    while (lineStart <= pretty.size()) {
+        const size_t lineEnd = std::min(pretty.find('\n', lineStart), pretty.size());
+        const std::string line = pretty.substr(lineStart, lineEnd - lineStart);
+        EXPECT_NE(line.find_first_not_of(" \t"), std::string::npos)
+            << "whitespace only line at offset " << lineStart << "\n" << pretty;
+        lineStart = lineEnd + 1;
+    }
+}
+
+// An array of objects is the case the empty lines were most visible in.
+TEST(CsonTests, testPrettyPrintArrayOfObjects) {
+    Array arr;
+    arr.addObject().addInt("a", 1);
+    arr.addObject().addInt("b", 2);
+
+    EXPECT_EQ(arr.toString(true),
+              "[\n"
+              "  {\n"
+              "    \"a\":1\n"
+              "  },\n"
+              "  {\n"
+              "    \"b\":2\n"
+              "  }\n"
+              "]");
+}
+
+// Scalars ignore prettyPrint entirely, they never span more than one line.
+TEST(CsonTests, testPrettyPrintScalars) {
+    Number number;
+    number.setInt(42);
+    EXPECT_EQ(number.toString(true), "42");
+
+    String str;
+    str.setString("a\"b\nc");
+    EXPECT_EQ(str.toString(true), "\"a\\\"b\\nc\"");
+
+    Boolean boolean;
+    boolean.setBool(true);
+    EXPECT_EQ(boolean.toString(true), "true");
+
+    Null null;
+    EXPECT_EQ(null.toString(true), "null");
+}
+
+// Empty containers still open and close on separate lines, and both do it the same way.
+TEST(CsonTests, testPrettyPrintEmptyContainers) {
+    Object emptyObject;
+    EXPECT_EQ(emptyObject.toString(true), "{\n}");
+
+    Array emptyArray;
+    EXPECT_EQ(emptyArray.toString(true), "[\n]");
+
+    Object root;
+    root.addObject("object");
+    root.addArray("array");
+    EXPECT_EQ(root.toString(true),
+              "{\n"
+              "  \"object\":{\n"
+              "  },\n"
+              "  \"array\":[\n"
+              "  ]\n"
+              "}");
+}
+
+// The indentation string is used verbatim, and level shifts everything but the opening
+// brace, which the caller is responsible for placing.
+TEST(CsonTests, testPrettyPrintIndentation) {
+    Object root;
+    root.addInt("a", 1);
+    root.addObject("b").addInt("c", 2);
+
+    EXPECT_EQ(root.toString(true, "    "),
+              "{\n"
+              "    \"a\":1,\n"
+              "    \"b\":{\n"
+              "        \"c\":2\n"
+              "    }\n"
+              "}");
+
+    EXPECT_EQ(root.toString(true, "\t"),
+              "{\n"
+              "\t\"a\":1,\n"
+              "\t\"b\":{\n"
+              "\t\t\"c\":2\n"
+              "\t}\n"
+              "}");
+
+    EXPECT_EQ(root.toString(true, "  ", 1),
+              "{\n"
+              "    \"a\":1,\n"
+              "    \"b\":{\n"
+              "      \"c\":2\n"
+              "    }\n"
+              "  }");
+}
+
+// Comments are dropped when writing compact json, but kept on their own line when pretty
+// printing.
+TEST(CsonTests, testPrettyPrintComments) {
+    Parser parser;
+    parser.allowComments(true);
+    const auto json = parser.parse("{\n// leading\n\"a\":1, // trailing\n\"arr\":[1, // in array\n2]\n}");
+
+    EXPECT_EQ(json.root().toString(true),
+              "{\n"
+              "  // leading\n"
+              "  \"a\":1,\n"
+              "  // trailing\n"
+              "  \"arr\":[\n"
+              "    1,\n"
+              "    // in array\n"
+              "    2\n"
+              "  ]\n"
+              "}");
+
+    EXPECT_EQ(json.root().toString(false), "{\"a\":1,\"arr\":[1,2]}");
+}
+
+// Whatever the pretty printer emits has to parse back into the same document, so the
+// indentation and the newlines never end up inside a value.
+TEST(CsonTests, testPrettyPrintRoundTrip) {
+    Object root;
+    buildPrettyPrintDocument(root);
+    // Keys and values that need escaping have to survive the trip as well.
+    root.addString("escaped\t key", "line\nbreak \"quoted\" \\ backslash");
+
+    for (const std::string& indentation : { std::string("  "), std::string("    "), std::string("\t") }) {
+        JSON json;
+        ASSERT_NO_THROW({ json = Parser::parseString(root.toString(true, indentation)); }) << indentation;
+        EXPECT_EQ(json.root().toString(false), root.toString(false)) << indentation;
+    }
+}
+
+// The JSON convenience wrapper maps its options onto the same pretty printer.
+TEST(CsonTests, testJsonToStringOptions) {
+    auto json = JSON::fromString("{\"a\":[{\"b\":1}]}");
+    const Entity& root = json.root();
+
+    EXPECT_EQ(json.toString(root), "{\"a\":[{\"b\":1}]}");
+
+    EXPECT_EQ(json.toString(root, { JSON::Option::prettyPrint }),
+              "{\n"
+              "  \"a\":[\n"
+              "    {\n"
+              "      \"b\":1\n"
+              "    }\n"
+              "  ]\n"
+              "}");
+
+    EXPECT_EQ(json.toString(root, { JSON::Option::prettyPrint, JSON::Option::indent4Spaces }),
+              "{\n"
+              "    \"a\":[\n"
+              "        {\n"
+              "            \"b\":1\n"
+              "        }\n"
+              "    ]\n"
+              "}");
+
+    EXPECT_EQ(json.toString(root, { JSON::Option::prettyPrint, JSON::Option::indentTab }),
+              "{\n"
+              "\t\"a\":[\n"
+              "\t\t{\n"
+              "\t\t\t\"b\":1\n"
+              "\t\t}\n"
+              "\t]\n"
+              "}");
 }
 
 TEST_P(DepthTests, testDepth) {
