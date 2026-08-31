@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <limits>
+#include <cinttypes>
 
 #ifndef _WIN32
 #define MJSONvsprintf(str, size, format, args) vsnprintf(str, size, format, args)
@@ -335,8 +336,8 @@ const std::string& Entity::stringValue() const {
     return string().value();
 }
 
-int Entity::intValue() const {
-    return atoi(number().value().c_str());
+int64_t Entity::intValue() const {
+    return strtoll(number().value().c_str(), nullptr, 10);
 }
 
 float Entity::floatValue() const {
@@ -395,9 +396,9 @@ Entity& Entity::operator[] (const std::string& key) {
     return *entity;
 }
 
-void Number::setInt(int i) {
+void Number::setInt(int64_t i) {
     char buf[256];
-    snprintf(buf, sizeof(buf), "%d", i);
+    snprintf(buf, sizeof(buf), "%" PRId64, i);
     mNumber = buf;
 }
 
@@ -417,9 +418,9 @@ void Number::setString(const std::string& num) {
     mNumber = num;
 }
 
-int Number::valueInt() const {
+int64_t Number::valueInt() const {
     std::istringstream stream(mNumber);
-    int v;
+    int64_t v;
     stream >> v;
     if (stream.fail()) {
         v = 0;
@@ -512,7 +513,7 @@ Object& Array::addObject() {
     return *arr;
 }
 
-Number& Array::addInt(int value) {
+Number& Array::addInt(int64_t value) {
     auto* num = new Number();
     num->setInt(value);
     mValues.push_back(num);
@@ -629,7 +630,7 @@ Number& Array::numberAtIndex(size_t index) const {
     return *static_cast<Number*>(mValues[index]);
 }
 
-int Array::intValueAtIndex(size_t index, int defaultValue) const {
+int64_t Array::intValueAtIndex(size_t index, int64_t defaultValue) const {
     if (index >= count() || !mValues[index] || !mValues[index]->isNumber()) {
         return defaultValue;
     }
@@ -781,7 +782,7 @@ Number& Object::addNumber(const std::string& name) {
     return *num;
 }
 
-Number& Object::addInt(const std::string& name, int i) {
+Number& Object::addInt(const std::string& name, int64_t i) {
     auto& number = addNumber(name);
     number.setInt(i);
     return number;
@@ -850,7 +851,7 @@ Null& Object::addNull(const std::string& name) {
     return *null;
 }
 
-Number& Object::setInt(const std::string& name, int i) {
+Number& Object::setInt(const std::string& name, int64_t i) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addInt(name, i);
@@ -1043,7 +1044,7 @@ Number* Object::numberForKey(const std::string& name) const {
     return static_cast<Number*>(it->second);
 }
 
-int Object::intValueForKey(const std::string& name, int defaultValue) const {
+int64_t Object::intValueForKey(const std::string& name, int64_t defaultValue) const {
     auto* number = numberForKey(name);
     if (!number) {
         return defaultValue;

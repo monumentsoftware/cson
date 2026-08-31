@@ -150,7 +150,7 @@ public:
     const std::string& stringValue() const;
     float floatValue() const;
     double doubleValue() const;
-    int intValue() const;
+    int64_t intValue() const;
     bool boolValue() const;
 
     const Entity& operator[] (size_t idx) const;
@@ -181,7 +181,7 @@ public:
     Array& addArray(const std::string& name);
     Object& addObject(const std::string& name);
     Number& addNumber(const std::string& name);
-    Number& addInt(const std::string& name, int i);
+    Number& addInt(const std::string& name, int64_t i);
     Number& addFloat(const std::string& name, float f);
     Number& addDouble(const std::string& name, double d);
     String& addString(const std::string& name, const char* value = nullptr);
@@ -189,7 +189,7 @@ public:
     Boolean& addBoolean(const std::string& name, bool b = false);
     Null& addNull(const std::string& name);
 
-    Number& setInt(const std::string& name, int i);
+    Number& setInt(const std::string& name, int64_t i);
     Number& setFloat(const std::string&name, float f);
     Number& setDouble(const std::string& name, double d);
     String& setString(const std::string& name, const char* value = nullptr);
@@ -198,8 +198,8 @@ public:
 
     const std::string& stringValueForKey(const char* name, const std::string& defaultValue = s_EmptyString) const { return stringValueForKey(std::string(name), defaultValue); }
     const std::string& stringValueForKey(const std::string& name, const std::string& defaultValue = s_EmptyString) const;
-    int intValueForKey(const char* name, int defaultValue = 0) const { return intValueForKey(std::string(name), defaultValue); }
-    int intValueForKey(const std::string& name, int defaultValue = 0) const;
+    int64_t intValueForKey(const char* name, int64_t defaultValue = 0) const { return intValueForKey(std::string(name), defaultValue); }
+    int64_t intValueForKey(const std::string& name, int64_t defaultValue = 0) const;
     float floatValueForKey(const char* name, float defaultValue = 0.0f) const { return floatValueForKey(std::string(name), defaultValue); }
     float floatValueForKey(const std::string& name, float defaultValue = 0.0f) const;
     double doubleValueForKey(const char* name, double defaultValue = 0.0f) const { return doubleValueForKey(std::string(name), defaultValue); }
@@ -333,7 +333,7 @@ public:
 
     Array& addArray();
     Object& addObject();
-    Number& addInt(int value);
+    Number& addInt(int64_t value);
     Number& addFloat(float value);
     Number& addDouble(double value);
     String& addString(const char* str);
@@ -342,7 +342,7 @@ public:
     Null& addNull();
 
     const std::string& stringValueAtIndex(size_t index, const std::string& defaultValue = s_EmptyString) const;
-    int intValueAtIndex(size_t index, int defaultValue = 0) const;
+    int64_t intValueAtIndex(size_t index, int64_t defaultValue = 0) const;
     float floatValueAtIndex(size_t index, float defaultValue = 0.0f) const;
     double doubleValueAtIndex(size_t index, double defaultValue = 0.0f) const;
     bool boolValueAtIndex(size_t index, bool defaultValue = false) const;
@@ -458,7 +458,7 @@ class Number : public Entity {
 public:
     Type type() const override { return Type::number; }
 
-    void setInt(int i);
+    void setInt(int64_t i);
     void setFloat(float f);
     void setDouble(double d);
     void setString(const std::string& num);
@@ -467,7 +467,7 @@ public:
     Entity* clone() const override;
 
     const std::string& value() const { return mNumber; }
-    int valueInt() const;
+    int64_t valueInt() const;
     float valueFloat() const;
     double valueDouble() const;
 private:
