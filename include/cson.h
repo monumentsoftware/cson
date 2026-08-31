@@ -185,6 +185,7 @@ public:
     Number& addFloat(const std::string& name, float f);
     Number& addDouble(const std::string& name, double d);
     String& addString(const std::string& name, const char* value = nullptr);
+    String& addString(const std::string& name, const std::string& value);
     Boolean& addBoolean(const std::string& name, bool b = false);
     Null& addNull(const std::string& name);
 
@@ -192,6 +193,7 @@ public:
     Number& setFloat(const std::string&name, float f);
     Number& setDouble(const std::string& name, double d);
     String& setString(const std::string& name, const char* value = nullptr);
+    String& setString(const std::string& name, const std::string& value);
     Boolean& setBoolean(const std::string& name, bool value = false);
 
     const std::string& stringValueForKey(const char* name, const std::string& defaultValue = s_EmptyString) const { return stringValueForKey(std::string(name), defaultValue); }

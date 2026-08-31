@@ -813,6 +813,20 @@ String& Object::addString(const std::string& name, const char* value) {
     return *str;
 }
 
+String& Object::addString(const std::string& name, const std::string& value) {
+    if (contains(name)) {
+        throw NoSuchKey();
+    }
+
+    auto* str = new String();
+    if (!value.empty()) {
+        str->setString(value);
+    }
+    mEntities.push_back(KeyAndEntity(name, str));
+    mEntityByKey[name] = str;
+    return *str;
+}
+
 Boolean& Object::addBoolean(const std::string& name, bool b) {
     if (contains(name)) {
         throw NoSuchKey();
@@ -879,6 +893,20 @@ Number& Object::setDouble(const std::string& name, double d) {
 }
 
 String& Object::setString(const std::string& name, const char* value) {
+    auto* ent = entityForKey(name);
+    if (!ent) {
+        return addString(name, value);
+    }
+
+    if (!ent->isString()) {
+        remove(name);
+        return addString(name, value);
+    }
+    ent->string().setString(value);
+    return ent->string();
+}
+
+String& Object::setString(const std::string& name, const std::string& value) {
     auto* ent = entityForKey(name);
     if (!ent) {
         return addString(name, value);
