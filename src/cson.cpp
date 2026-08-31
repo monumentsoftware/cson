@@ -198,27 +198,27 @@ static std::string EscapeString(const std::string& str) {
 }
 
 bool Entity::isObject() const {
-    return dynamic_cast<const Object*>(this) != NULL;
+    return dynamic_cast<const Object*>(this) != nullptr;
 }
 
 bool Entity::isArray() const {
-    return dynamic_cast<const Array*>(this) != NULL;
+    return dynamic_cast<const Array*>(this) != nullptr;
 }
 
 bool Entity::isString() const {
-    return dynamic_cast<const String*>(this) != NULL;
+    return dynamic_cast<const String*>(this) != nullptr;
 }
 
 bool Entity::isNumber() const {
-    return dynamic_cast<const Number*>(this) != NULL;
+    return dynamic_cast<const Number*>(this) != nullptr;
 }
 
 bool Entity::isBoolean() const {
-    return dynamic_cast<const Boolean*>(this) != NULL;
+    return dynamic_cast<const Boolean*>(this) != nullptr;
 }
 
 bool Entity::isNull() const {
-    return dynamic_cast<const Null*>(this) != NULL;
+    return dynamic_cast<const Null*>(this) != nullptr;
 }
 
 const Object& Entity::object() const {
@@ -1042,7 +1042,7 @@ double Object::doubleValueForKey(const std::string& name, double defaultValue) c
 Array* Object::arrayForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isArray()) {
-        return NULL;
+        return nullptr;
     }
     return static_cast<Array*>(it->second);
 }

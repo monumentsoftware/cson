@@ -184,14 +184,14 @@ public:
     Number& addInt(const std::string& name, int i);
     Number& addFloat(const std::string& name, float f);
     Number& addDouble(const std::string& name, double d);
-    String& addString(const std::string& name, const char* value = NULL);
+    String& addString(const std::string& name, const char* value = nullptr);
     Boolean& addBoolean(const std::string& name, bool b = false);
     Null& addNull(const std::string& name);
 
     Number& setInt(const std::string& name, int i);
     Number& setFloat(const std::string&name, float f);
     Number& setDouble(const std::string& name, double d);
-    String& setString(const std::string& name, const char* value = NULL);
+    String& setString(const std::string& name, const char* value = nullptr);
     Boolean& setBoolean(const std::string& name, bool value = false);
 
     const std::string& stringValueForKey(const char* name, const std::string& defaultValue = s_EmptyString) const { return stringValueForKey(std::string(name), defaultValue); }
