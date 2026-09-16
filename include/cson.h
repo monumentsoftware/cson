@@ -196,6 +196,8 @@ public:
     String& setString(const std::string& name, const std::string& value);
     Boolean& setBoolean(const std::string& name, bool value = false);
 
+    String* stringForKey(const std::string& name) const;
+    String* stringForKey(const char* name) const { return stringForKey(std::string(name)); }
     const std::string& stringValueForKey(const char* name, const std::string& defaultValue = s_EmptyString) const { return stringValueForKey(std::string(name), defaultValue); }
     const std::string& stringValueForKey(const std::string& name, const std::string& defaultValue = s_EmptyString) const;
     int64_t intValueForKey(const char* name, int64_t defaultValue = 0) const { return intValueForKey(std::string(name), defaultValue); }

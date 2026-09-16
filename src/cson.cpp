@@ -1020,12 +1020,20 @@ std::string Object::toString(bool prettyPrint, const std::string& indentation, s
     return s;
 }
 
-const std::string& Object::stringValueForKey(const std::string& name, const std::string& defaultValue) const {
+String* Object::stringForKey(const std::string& name) const {
     auto it = mEntityByKey.find(name);
     if (it == mEntityByKey.end() || !it->second || !it->second->isString()) {
+        return nullptr;
+    }
+    return static_cast<String*>(it->second);
+}
+
+const std::string& Object::stringValueForKey(const std::string& name, const std::string& defaultValue) const {
+    const auto* s = stringForKey(name);
+    if (!s) {
         return defaultValue;
     }
-    return static_cast<String*>(it->second)->value();
+    return s->value();
 }
 
 Number* Object::numberForKey(const std::string& name) const {
