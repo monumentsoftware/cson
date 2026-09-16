@@ -463,7 +463,7 @@ Entity* Number::clone() const {
 }
 
 void String::setString(const char* str) {
-    mValue = std::string(str);
+    mValue = str ? std::string(str) : std::string();
 }
 
 void String::setString(const std::string& str) {
@@ -535,7 +535,7 @@ Number& Array::addDouble(double value) {
 }
 
 String& Array::addString(const char* str) {
-    auto* s = new String(str);
+    auto* s = new String(str ? str : "");
     mValues.push_back(s);
     return *s;
 }
